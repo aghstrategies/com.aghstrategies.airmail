@@ -9,22 +9,30 @@ use CRM_Airmail_ExtensionUtil as E;
  */
 class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
   public function buildQuickForm() {
+    $settings = CRM_Airmail_Utils::getSettings();
 
-    // add form elements
-    $this->add(
-      'select', // field type
-      'favorite_color', // field name
-      'Favorite Color', // field label
-      $this->getColorOptions(), // list of options
-      TRUE // is required
-    );
+    // compile what the endpoint url will look like
+    $q = empty($settings['secretcode']) ? 'reset=1' : "reset=1&secretcode={$settings['secretcode']}";
+    $url = CRM_Utils_System::url('civicrm/sendgrid/webhook', $q, TRUE, NULL, FALSE, TRUE);
+
+    // Add form Elements
+    $attr = NULL;
+    $secretCode = $this->add('text', 'secretcode', ts('Secret Code'), $attr, TRUE);
+    $secretCode->setSize(40);
+    $clickProcessor = $this->add('select', 'open_click_processor', ts('Open / Click Processing'), NULL, TRUE);
+    $clickProcessor->loadArray(array('CiviMail' => ts('CiviMail'), 'Never' => ts('Do No Track'), 'SendGrid' => ts('SendGrid')));
+    $smptpService = $this->add('select', 'external_smtp_service', ts('External SMTP Service'), NULL, TRUE);
+    $smptpService->loadArray(array('SES' => ts('Amazon SES')));
     $this->addButtons(array(
       array(
         'type' => 'submit',
-        'name' => E::ts('Submit'),
+        'name' => E::ts('Save Configuration'),
         'isDefault' => TRUE,
       ),
     ));
+
+    $this->setDefaults($settings);
+    $this->assign('url', $url);
 
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
@@ -32,26 +40,24 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
   }
 
   public function postProcess() {
-    $values = $this->exportValues();
-    $options = $this->getColorOptions();
-    CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
-      1 => $options[$values['favorite_color']],
-    )));
-    parent::postProcess();
-  }
-
-  public function getColorOptions() {
-    $options = array(
-      '' => E::ts('- select -'),
-      '#f00' => E::ts('Red'),
-      '#0f0' => E::ts('Green'),
-      '#00f' => E::ts('Blue'),
-      '#f0f' => E::ts('Purple'),
-    );
-    foreach (array('1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e') as $f) {
-      $options["#{$f}{$f}{$f}"] = E::ts('Grey (%1)', array(1 => $f));
+    // save settings to database
+    $vars = $this->getSubmitValues();
+    $settings = CRM_Airmail_Utils::getSettings();
+    foreach ($vars as $k => $v) {
+      if (array_key_exists($k, $settings)) {
+        $settings[$k] = $v;
+      }
     }
-    return $options;
+    CRM_Airmail_Utils::saveSettings($settings);
+
+    // $values = $this->exportValues();
+    // $options = $this->getColorOptions();
+    // CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
+    //   1 => $options[$values['favorite_color']],
+    // )));
+    parent::postProcess();
+
+    // CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/airmail/settings', 'reset=1'));
   }
 
   /**
