@@ -7,9 +7,15 @@
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
-    <path>civicrm/airmai/webhook/ses</path>
+    <path>civicrm/airmail/webhook/ses</path>
     <page_callback>CRM_Airmail_Page_Webhook_Ses</page_callback>
     <title>Webhook_Ses</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/airmail/settings</path>
+    <page_callback>CRM_Airmail_Form_Airmail_Settings</page_callback>
+    <title>Airmail_Settings</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>
