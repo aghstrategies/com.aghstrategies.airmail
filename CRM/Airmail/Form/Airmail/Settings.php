@@ -9,6 +9,7 @@ use CRM_Airmail_ExtensionUtil as E;
  */
 class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
   public function buildQuickForm() {
+    CRM_Utils_System::setTitle(E::ts('Airmail Settings'));
     $settings = CRM_Airmail_Utils::getSettings();
 
     // compile what the endpoint url will look like
