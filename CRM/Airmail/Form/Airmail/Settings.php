@@ -14,7 +14,7 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
 
     // compile what the endpoint url will look like
     $q = empty($settings['secretcode']) ? 'reset=1' : "reset=1&secretcode={$settings['secretcode']}";
-    $url = CRM_Utils_System::url('civicrm/sendgrid/webhook', $q, TRUE, NULL, FALSE, TRUE);
+    $url = CRM_Utils_System::url('civicrm/airmail/webhook', $q, TRUE, NULL, FALSE, TRUE);
 
     // Add form Elements
     $attr = NULL;
