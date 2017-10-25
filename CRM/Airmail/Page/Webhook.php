@@ -31,8 +31,8 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
     if ($events->Type == 'Notification' && !empty($events->Message)) {
       $responseMessage = json_decode($events->Message);
       $mailingJobInfo = NULL;
-      if (!empty($responseMessage->mail->source)) {
-        $mailingJobInfo = self::parseSource($responseMessage->mail->source);
+      if (!empty($responseMessage->mail->source) && !empty($responseMessage->mail->destination[0])) {
+        $mailingJobInfo = self::parseSource($responseMessage->mail->source, $responseMessage->mail->destination[0]);
       }
       if (!empty($responseMessage->notificationType) && !empty($mailingJobInfo)) {
         switch ($responseMessage->notificationType) {
@@ -51,7 +51,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
 
   public static function bounce($details) {
     try {
-      civicrm_api3('Mailing', 'event_bounce', array(
+      $bounceEvent = civicrm_api3('Mailing', 'event_bounce', array(
         'job_id' => $event->job_id,
         'event_queue_id' => $event->event_queue_id,
         'hash' => $event->hash,
@@ -63,11 +63,26 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
     }
   }
 
-  public static function parseSource($string) {
-    // $string ex: b.179.46.731d881bbb3f9aad@sestest.garrison.aghstrategies.net
-    // Based off of https://github.com/civicrm/civicrm-core/blob/master/CRM/Utils/Mail/EmailProcessor.php
-    $regex = '/^' . preg_quote($dao->localpart) . '(b|c|e|o|r|u)' . $twoDigitString . '([0-9a-f]{16})@' . preg_quote($dao->domain) . '$/';
-    CRM_Core_Error::debug_log_message($regex, FALSE, 'AirmailWebhook');
+  public static function parseSource($string, $emailAddress) {
+    $matches = array();
+    $dao = new CRM_Core_DAO_MailSettings();
+    $dao->domain_id = CRM_Core_Config::domainID();
+    $dao->find();
+    while ($dao->fetch()) {
+      $config = CRM_Core_Config::singleton();
+      $verpSeperator = preg_quote($config->verpSeparator);
+      $twoDigitStringMin = $verpSeperator . '(\d+)' . $verpSeperator . '(\d+)';
+      $twoDigitString = $twoDigitStringMin . $verpSeperator;
+      // $string ex: b.179.46.731d881bbb3f9aad@sestest.garrison.aghstrategies.net
+      // Based off of https://github.com/civicrm/civicrm-core/blob/master/CRM/Utils/Mail/EmailProcessor.php
+      $regex = '/^' . preg_quote($dao->localpart) . '(b|c|e|o|r|u)' . $twoDigitString . '([0-9a-f]{16})@' . preg_quote($dao->domain) . '$/';
+      if (preg_match($regex, $emailAddress, $matches)) {
+        list($match, $action, $job, $queue, $hash) = $matches;
+        CRM_Core_Error::debug_log_message($matches, FALSE, 'AirmailWebhook');
+        break;
+      }
+    }
+
   }
 
 }
