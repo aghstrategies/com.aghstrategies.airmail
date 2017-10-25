@@ -4,13 +4,13 @@
     <path>civicrm/airmail/webhook</path>
     <page_callback>CRM_Airmail_Page_Webhook</page_callback>
     <title>Webhook</title>
-    <access_arguments>access CiviCRM</access_arguments>
+    <access_callback>1</access_callback>
   </item>
   <item>
     <path>civicrm/airmail/webhook/ses</path>
     <page_callback>CRM_Airmail_Page_Webhook_Ses</page_callback>
     <title>Webhook_Ses</title>
-    <access_arguments>access CiviCRM</access_arguments>
+    <access_callback>1</access_callback>
   </item>
   <item>
     <path>civicrm/airmail/settings</path>
