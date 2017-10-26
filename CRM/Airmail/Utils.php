@@ -56,4 +56,42 @@ class CRM_Airmail_Utils {
     }
   }
 
+  /**
+   * breakes down source string
+   * @param  string $string string of job id hash and queue ex: b.179.46.731d881bbb3f9aad@ex.com
+   * @return array   including job id, event queue id and hash
+   */
+  public static function parseSourceString($string) {
+    $dao = new CRM_Core_DAO_MailSettings();
+    $dao->domain_id = CRM_Core_Config::domainID();
+    $dao->find();
+    while ($dao->fetch()) {
+      // 0 = activities; 1 = bounce in this case we are just looking for bounce
+      if ($dao->is_default == 1) {
+
+        // empty array to use for preg match
+        $matches = array();
+
+        // Get Verp separtor setting
+        $config = CRM_Core_Config::singleton();
+        $verpSeperator = preg_quote($config->verpSeparator);
+
+        $twoDigitStringMin = $verpSeperator . '(\d+)' . $verpSeperator . '(\d+)';
+        $twoDigitString = $twoDigitStringMin . $verpSeperator;
+        // $string ex: b.179.46.731d881bbb3f9aad@sestest.garrison.aghstrategies.net
+        // Based off of https://github.com/civicrm/civicrm-core/blob/master/CRM/Utils/Mail/EmailProcessor.php
+        $regex = '/^' . preg_quote($dao->localpart) . '(b|c|e|o|r|u)' . $twoDigitString . '([0-9a-f]{16})@' . preg_quote($dao->domain) . '$/';
+        if (preg_match($regex, $string, $matches)) {
+          list($match, $action, $job, $queue, $hash) = $matches;
+          $bounceEvent = array(
+            'job_id' => $job,
+            'event_queue_id' => $queue,
+            'hash' => $hash,
+          );
+          return $bounceEvent;
+        }
+      }
+    }
+  }
+
 }
