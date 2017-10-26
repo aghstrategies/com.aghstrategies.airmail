@@ -20,7 +20,6 @@ class CRM_Airmail_Utils {
     if (empty($settings)) {
       $settings = array(
         'secretcode' => NULL,
-        'open_click_processor' => NULL,
         'external_smtp_service' => NULL,
       );
       foreach ($settings as $setting => $val) {
