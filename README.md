@@ -64,3 +64,4 @@ At first the Subscription will show up as pendingConfirmation, you may need to w
 + Save the arn to civi when there is a successful subscription
 + add nav menu item for the airmail settings page
 + Set up so one can have smtp service track opens/clicks
++ Add other external smtp services ... low hanging fruit would be send grid
