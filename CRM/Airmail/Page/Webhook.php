@@ -12,14 +12,20 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
     //  CRM_Core_Error::debug_log_message('sns' . print_r($events, TRUE), FALSE, 'AirmailWebhook');
 
     // TODO make sure its coming from url with secret code by uncommenting section below
-    if (!$events || !is_array($events)
-      || (!empty($settings['secretcode']) && $settings['secretcode'] != CRM_Utils_Array::value('secretcode', $_REQUEST))) {
-      // Ses sends a json encoded array of events
-      // if that's not what we get, we're done here
-      // or if the secret code doesn't match
-      CRM_Utils_System::setHttpHeader("Status", "404 Not Found");
-      CRM_Utils_System::civiExit();
+    if (!$events || !is_array($events)) {
+      CRM_Core_Error::debug_log_message('events failing', FALSE, 'AirmailWebhook');
     }
+    if (!empty($settings['secretcode']) && $settings['secretcode'] != CRM_Utils_Array::value('secretcode', $_REQUEST)) {
+      CRM_Core_Error::debug_log_message('secret code failing', FALSE, 'AirmailWebhook');
+    }
+    // if (!$events || !is_array($events)
+    //   || (!empty($settings['secretcode']) && $settings['secretcode'] != CRM_Utils_Array::value('secretcode', $_REQUEST))) {
+    //   // Ses sends a json encoded array of events
+    //   // if that's not what we get, we're done here
+    //   // or if the secret code doesn't match
+    //   CRM_Utils_System::setHttpHeader("Status", "404 Not Found");
+    //   CRM_Utils_System::civiExit();
+    // }
 
     //  If the message is to confirm subscription to SNS
     if ($events->Type == 'SubscriptionConfirmation' && !empty($events->SubscribeURL)) {
@@ -38,16 +44,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
       if (!empty($responseMessage->notificationType) && !empty($mailingJobInfo)) {
         switch ($responseMessage->notificationType) {
           case 'Bounce':
-            $body = 'Bounce: ';
-            if ($responseMessage->bounce) {
-              $bounceDetails = json_decode($responseMessage->bounce);
-              if (!empty($bounceDetails->bounceType)) {
-                $body .= $bounceDetails->bounceType;
-              }
-              if (!empty($bounceDetails->bounceSubType)) {
-                $body .= " $bounceDetails->bounceSubType";
-              }
-            }
+            $body = "Bounce Description: {$responseMessage->bounce->bounceType} {$responseMessage->bounce->bounceSubType}";
             CRM_Airmail_BAO_Airmail::bounce($mailingJobInfo['job_id'], $mailingJobInfo['event_queue_id'], $mailingJobInfo['hash'], $body);
             break;
 
