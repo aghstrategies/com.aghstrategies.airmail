@@ -7,12 +7,6 @@
     <access_callback>1</access_callback>
   </item>
   <item>
-    <path>civicrm/airmail/webhook/ses</path>
-    <page_callback>CRM_Airmail_Page_Webhook_Ses</page_callback>
-    <title>Webhook_Ses</title>
-    <access_callback>1</access_callback>
-  </item>
-  <item>
     <path>civicrm/airmail/settings</path>
     <page_callback>CRM_Airmail_Form_Airmail_Settings</page_callback>
     <title>Airmail_Settings</title>
