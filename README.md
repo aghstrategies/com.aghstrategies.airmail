@@ -52,8 +52,15 @@ For Create a subscription the Topic ARN should be populates, The Protocol should
 
 At first the Subscription will show up as pendingConfirmation, you may need to wait a minute and then refresh the page before it confirms... SNS sends a subscribe URL to your site which this extension responds to.. that process takes a minute or two.
 
-THINGS TO DO:
+### Useful resources
 
-+ Deal with all Event Types?
-+ When Event Type is Complaint, opt out the contact from all emails
++ Amazon's Testing Email Addresses: http://docs.aws.amazon.com/ses/latest/DeveloperGuide/mailbox-simulator.html
++ Amazon Documentation on SNS messages to HTTP: http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html
+
+### To Dos:
+
++ Deal with all Event Types including "Reject", "Send", "Delivery", "Click", "Open", and "Rendering Failure"
++ When Event Type is Complaint, opt out the contact from all emails (need to get contact id to do this)
 + Save the arn to civi when there is a successful subscription
++ add nav menu item for the airmail settings page
++ Set up so one can have smtp service track opens/clicks

@@ -21,15 +21,14 @@ class CRM_Airmail_BAO_Ses {
       }
       if (!empty($responseMessage->notificationType) && !empty($mailingJobInfo) && $mailingJobInfo['job_id']) {
         switch ($responseMessage->notificationType) {
+          // NOTE there are other Event Types including "Reject", "Send", "Delivery", "Click", "Open", and "Rendering Failure" which we are not currently addressing
           case 'Bounce':
             $body = "Bounce Description: {$responseMessage->bounce->bounceType} {$responseMessage->bounce->bounceSubType}";
             CRM_Airmail_BAO_Airmail::bounce($mailingJobInfo['job_id'], $mailingJobInfo['event_queue_id'], $mailingJobInfo['hash'], $body);
             break;
 
-          case 'Delivery':
-            break;
-
           case 'Complaint':
+            // TODO opt out contact entirely
             CRM_Airmail_BAO_Airmail::spamreport($mailingJobInfo['job_id'], $mailingJobInfo['event_queue_id'], $mailingJobInfo['hash']);
             break;
 

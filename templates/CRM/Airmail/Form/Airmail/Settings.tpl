@@ -27,12 +27,7 @@
     {*<p>{ts}We should probably put a link here to the event notification setup screen on Airmail.{/ts}</p>*}
     <p>Based on the secret code provided above, your <em>HTTP Post URL</em> is...</p>
     <pre>{$url}</pre>
-    <p>{ts}While it is safe to select all actions to be reported by the Airmail Event Notification app,
-    for better performance <em>Processed</em>, <em>ASM Group Unsubscribe</em>, and <em>ASM Group Resubscribe</em>
-    should be deselected. They are essentially meaningless and therefore ignored. CiviCRM already counts as
-    delivered as soon as the mail is sent, so <em>Delivered</em> is also ignored. <em>Deferred</em> is simply
-    a temporary failure that will be reattempted; this extension does nothing more that record it to the main
-    CiviCRM log, so you may wish to deselect this action as well.{/ts}</p>
+    <p>{ts}see README.md for more details on how to configure your external SMTP service{/ts}</p>
   </div>
 
 </div>
