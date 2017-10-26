@@ -15,12 +15,12 @@ class CRM_Airmail_Utils_Ses extends CRM_Airmail_Utils {
     }
     CRM_Core_Error::debug_log_message('getNotifcations ses', FALSE, 'AirmailWebhook');
     // If the message is a notification of a mailing event
-    if ($events->Type == 'Notification' && !empty($events->Message)) {
+    if ($events->Type == 'Notification' && $events->Message) {
       $responseMessage = json_decode($events->Message);
       CRM_Core_Error::debug_log_message($responseMessage, FALSE, 'AirmailWebhook');
       CRM_Core_Error::debug_log_message(print_r($responseMessage, TRUE), FALSE, 'AirmailWebhook');
 
-      self::processNotification($events->Message->mail->source, $events->Message->notificationType, $events->Message);
+      self::processNotification($responseMessage->mail->source, $responseMessage->notificationType, $responseMessage);
     }
 
   }
