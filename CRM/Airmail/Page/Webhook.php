@@ -21,7 +21,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
 
     // IF SES
     if ($settings['external_smtp_service'] == 'SES') {
-      CRM_Airmail_BAO_Ses::processEvents($events);
+      CRM_Airmail_Utils_Ses::getNotifications($events);
     }
     CRM_Utils_System::civiExit();
   }

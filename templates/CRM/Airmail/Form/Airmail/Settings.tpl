@@ -8,12 +8,6 @@
       </td>
     </tr>
     <tr>
-      <td class="label">{$form.open_click_processor.label}</td>
-      <td>{$form.open_click_processor.html}<br />
-        <span class="description">{ts}Select where open and click-throughs should be processed. Either way, the same data is collected, stored, and reported.{/ts}</span>
-      </td>
-    </tr>
-    <tr>
       <td class="label">{$form.external_smtp_service.label}</td>
       <td>{$form.external_smtp_service.html}<br />
       </td>

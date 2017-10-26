@@ -18,12 +18,10 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
 
     // Add form Elements
     $attr = NULL;
-    $secretCode = $this->add('text', 'secretcode', ts('Secret Code'), $attr, TRUE);
+    $secretCode = $this->add('text', 'secretcode', E::ts('Secret Code'), $attr, TRUE);
     $secretCode->setSize(40);
-    $clickProcessor = $this->add('select', 'open_click_processor', ts('Open / Click Processing'), NULL, TRUE);
-    $clickProcessor->loadArray(array('CiviMail' => ts('CiviMail'), 'Never' => ts('Do No Track'), 'SendGrid' => ts('SendGrid')));
-    $smptpService = $this->add('select', 'external_smtp_service', ts('External SMTP Service'), NULL, TRUE);
-    $smptpService->loadArray(array('SES' => ts('Amazon SES')));
+    $smptpService = $this->add('select', 'external_smtp_service', E::ts('External SMTP Service'), NULL, TRUE);
+    $smptpService->loadArray(array('SES' => E::ts('Amazon SES')));
     $this->addButtons(array(
       array(
         'type' => 'submit',
