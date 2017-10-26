@@ -38,8 +38,8 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
       if (!empty($responseMessage->notificationType) && !empty($mailingJobInfo)) {
         switch ($responseMessage->notificationType) {
           case 'Bounce':
-            $body = '';
-            if (!empty($responseMessage->bounce)) {
+            $body = 'Bounce: ';
+            if ($responseMessage->bounce) {
               $bounceDetails = json_decode($responseMessage->bounce);
               if (!empty($bounceDetails->bounceType)) {
                 $body .= $bounceDetails->bounceType;
