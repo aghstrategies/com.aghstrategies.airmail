@@ -3,7 +3,7 @@
 class CRM_Airmail_Utils {
 
 
-  public static function getNotifications($events) {
+  public function getNotifications($events) {
     self::processNotification($source, $type, $extra = NULL);
   }
 
@@ -15,7 +15,7 @@ class CRM_Airmail_Utils {
    * Get Settings if Set
    * @return array key is setting name value is value of setting
    */
-  public static function getSettings() {
+  public function getSettings() {
     $settings = Civi::cache()->get('airmailSettings');
     if (empty($settings)) {
       $settings = array(
@@ -46,7 +46,7 @@ class CRM_Airmail_Utils {
    * Save airmail settings
    * @param  array $settings settings to save
    */
-  public static function saveSettings($settings) {
+  public function saveSettings($settings) {
     $existingSettings = Civi::cache()->get('airmailSettings');
     $settingsToSave = array();
     foreach ($settings as $k => $v) {
@@ -70,7 +70,7 @@ class CRM_Airmail_Utils {
    * @param  string $string string of job id hash and queue ex: b.179.46.731d881bbb3f9aad@ex.com
    * @return array   including job id, event queue id and hash
    */
-  public static function parseSourceString($string) {
+  public function parseSourceString($string) {
     $dao = new CRM_Core_DAO_MailSettings();
     $dao->domain_id = CRM_Core_Config::domainID();
     $dao->find();
@@ -110,7 +110,7 @@ class CRM_Airmail_Utils {
    * @param  string $hash  hash
    * @param  string $body  description
    */
-  public static function bounce($job, $queue, $hash, $body = 'unknown') {
+  public function bounce($job, $queue, $hash, $body = 'unknown') {
     $params = array(
       'job_id' => $job,
       'event_queue_id' => $queue,
@@ -125,7 +125,7 @@ class CRM_Airmail_Utils {
     }
   }
 
-  public static function unsubscribe($job_id, $event_queue_id, $hash) {
+  public function unsubscribe($job_id, $event_queue_id, $hash) {
     try {
       $result = civicrm_api3('MailingEventUnsubscribe', 'create', array(
         'job_id' => $job_id,
@@ -138,7 +138,7 @@ class CRM_Airmail_Utils {
     }
   }
 
-  public static function spamreport($job_id, $event_queue_id, $hash) {
+  public function spamreport($job_id, $event_queue_id, $hash) {
     // TODO: This needs to be replaced with something else like in
     // https://github.com/cividesk/com.cividesk.email.sparkpost/blob/master/CRM/Sparkpost/Page/callback.php#L95
     // which isn't ideal but will do the trick.
