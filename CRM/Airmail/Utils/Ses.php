@@ -13,7 +13,6 @@ class CRM_Airmail_Utils_Ses extends CRM_Airmail_Utils {
       // TODO parse the xml and save the info to civi just in case
       $snsResponse == file_get_contents($events->SubscribeURL);
     }
-    CRM_Core_Error::debug_log_message('getNotifcations ses', FALSE, 'AirmailWebhook');
     // If the message is a notification of a mailing event
     if ($events->Type == 'Notification') {
       $responseMessage = json_decode($events->Message);
