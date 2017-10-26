@@ -6,6 +6,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
   public function run() {
     // get information sent from Amazon SNS
     $events = json_decode(file_get_contents('php://input'));
+    $settings = CRM_Airmail_Utils::getSettings();
 
     // NOTE if you want to log the contents of the post un comment this line
     //  CRM_Core_Error::debug_log_message('sns' . print_r($events, TRUE), FALSE, 'AirmailWebhook');
