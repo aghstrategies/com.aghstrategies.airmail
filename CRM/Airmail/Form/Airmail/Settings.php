@@ -1,6 +1,6 @@
 <?php
 
-use CRM_Airmail_ExtensionUtil as E;
+use CRM_Airmail_Utils as E;
 
 /**
  * Form controller class
@@ -8,13 +8,9 @@ use CRM_Airmail_ExtensionUtil as E;
  * @see https://wiki.civicrm.org/confluence/display/CRMDOC/QuickForm+Reference
  */
 class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
+
   public function buildQuickForm() {
     CRM_Utils_System::setTitle(E::ts('Airmail Settings'));
-    $settings = CRM_Airmail_Utils::getSettings();
-
-    // compile what the endpoint url will look like
-    $q = empty($settings['secretcode']) ? 'reset=1' : "reset=1&secretcode={$settings['secretcode']}";
-    $url = CRM_Utils_System::url('civicrm/airmail/webhook', $q, TRUE, NULL, FALSE, TRUE);
 
     // Add form Elements
     $attr = NULL;
@@ -30,30 +26,38 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
       ),
     ));
 
+    $settings = E::getSettings();
     $this->setDefaults($settings);
-    $this->assign('url', $url);
+    $this->assign('url', $this->getUrl());
 
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
     parent::buildQuickForm();
   }
 
+  /**
+   * Compile what the endpoint URL should be
+   *
+   * @return string
+   *   The URL for the webhook endpoint.
+   */
+  public function getUrl() {
+    $settings = E::getSettings();
+    $q = empty($settings['secretcode']) ? 'reset=1' : "reset=1&secretcode={$settings['secretcode']}";
+    return CRM_Utils_System::url('civicrm/airmail/webhook', $q, TRUE, NULL, FALSE, TRUE);
+  }
+
   public function postProcess() {
     // save settings to database
     $vars = $this->getSubmitValues();
-    $settings = CRM_Airmail_Utils::getSettings();
+    $settings = E::getSettings();
     foreach ($vars as $k => $v) {
       if (array_key_exists($k, $settings)) {
         $settings[$k] = $v;
       }
     }
-    CRM_Airmail_Utils::saveSettings($settings);
+    E::saveSettings($settings);
 
-    // $values = $this->exportValues();
-    // $options = $this->getColorOptions();
-    // CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
-    //   1 => $options[$values['favorite_color']],
-    // )));
     parent::postProcess();
 
     // CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/airmail/settings', 'reset=1'));
