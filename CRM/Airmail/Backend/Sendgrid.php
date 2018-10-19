@@ -1,5 +1,7 @@
 <?php
 
+use CRM_Airmail_Utils as E;
+
 class CRM_Airmail_Backend_Sendgrid implements CRM_Airmail_Backend {
 
   public function processInput($input) {
