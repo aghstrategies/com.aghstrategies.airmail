@@ -9,7 +9,7 @@
   <item>
     <path>civicrm/airmail/settings</path>
     <page_callback>CRM_Airmail_Form_Airmail_Settings</page_callback>
-    <title>Airmail_Settings</title>
+    <title>Airmail SMTP Event Notification Processor Settings</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>

@@ -16,8 +16,8 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
     $attr = NULL;
     $secretCode = $this->add('text', 'secretcode', E::ts('Secret Code'), $attr, TRUE);
     $secretCode->setSize(40);
-    $smptpService = $this->add('select', 'external_smtp_service', E::ts('External SMTP Service'), NULL, TRUE);
-    $smptpService->loadArray(array('SES' => E::ts('Amazon SES')));
+    $smtpService = $this->add('select', 'external_smtp_service', E::ts('External SMTP Service'), NULL, TRUE);
+    $smtpService->loadArray(E::listBackends(TRUE));
     $this->addButtons(array(
       array(
         'type' => 'submit',
@@ -60,6 +60,7 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
 
     parent::postProcess();
 
+    // TODO: why is this commented out?
     // CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/airmail/settings', 'reset=1'));
   }
 

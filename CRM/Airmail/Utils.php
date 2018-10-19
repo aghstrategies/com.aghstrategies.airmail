@@ -70,13 +70,27 @@ class CRM_Airmail_Utils {
    *
    * @return array
    */
-  public static function listBackends() {
-    return [
+  public static function listBackends($optionList = FALSE) {
+    $backends = [
       'SES' => [
-        'class' => CRM_Airmail_Backend_Ses,
+        'class' => 'CRM_Airmail_Backend_Ses',
         'label' => 'Amazon SES',
       ],
+      'SendGrid' => [
+        'class' => 'CRM_Airmail_Backend_Sendgrid',
+        'label' => 'SendGrid',
+      ],
     ];
+
+    if ($optionList) {
+      $return = [];
+      foreach ($backends as $val => $backend) {
+        $return[$val] = $backend['label'];
+      }
+      return $return;
+    }
+
+    return $backends;
   }
 
   /**
@@ -144,6 +158,51 @@ class CRM_Airmail_Utils {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(self::ts('API Error: %1', [1 => $error]));
     }
+  }
+
+
+  /**
+   * Look up a mailing ID by job ID.
+   * @param int $jobId
+   *   The ID number of the job.
+   *
+   * @return int
+   *   The ID number of the corresponding mailing
+   */
+  public static function mailingIdFromJob($jobId) {
+    $cachedMailingIDs = Civi::cache()->get('airmailMailingIds') ?: array();
+    if (empty($cachedMailingIDs[$jobId])) {
+      try {
+        $cachedMailingIDs[$jobId] = civicrm_api3('MailingJob', 'getvalue', array(
+          'return' => "mailing_id",
+          'id' => $jobId,
+        ));
+        Civi::cache()->get('airmailMailingIds', $cachedMailingIDs);
+      }
+      catch (CiviCRM_API3_Exception $e) {
+        $error = $e->getMessage();
+        CRM_Core_Error::debug_log_message(self::ts('API Error retrieving mailing ID: %1', [1 => $error]));
+      }
+    }
+    return $cachedMailingIDs[$jobId];
+  }
+
+  /**
+   * Look up a mailing by the job ID.
+   *
+   * @param int $jobId
+   *   The ID number of a job.
+   * @return array
+   *   The result of Mailing.getsingle.
+   */
+  public static function getMailingByJob($jobId) {
+    $mailingId = self::mailingIdFromJob($jobId);
+    $mailingCache = Civi::cache()->get('airmailMailingCache') ?: array();
+    if (empty($mailingCache[$mailingId])) {
+      $mailingCache[$mailingId] = civicrm_api3('Mailing', 'getsingle', array('id' => $mailingId));
+      Civi::cache()->set('airmailMailingCache', $mailingCache);
+    }
+    return $mailingCache[$mailingId];
   }
 
 }

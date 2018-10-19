@@ -1,7 +1,42 @@
 <?php
 
 require_once 'airmail.civix.php';
-use CRM_Airmail_ExtensionUtil as E;
+use CRM_Airmail_Utils as E;
+
+
+/**
+ * Implements hook_civicrm_alterMailParams().
+ */
+function airmail_civicrm_alterMailParams(&$params, $context) {
+  $backend = E::getBackend();
+  if (!$backend || !in_array('CRM_Airmail_Backend', class_implements($backend))) {
+    return;
+  }
+
+  $backend->alterMailParams($params, $context);
+}
+
+/**
+ * hook_civicrm_navigationMenu
+ *
+ * add "Airmail Configuration" to the Mailings menu
+ */
+function airmail_civicrm_navigationMenu(&$menu) {
+
+  $adder = new CRM_Airmail_NavAdd($menu);
+
+  $attributes = array(
+    'label' => ts('Airmail Configuration'),
+    'name' => 'Airmail Configuration',
+    'url' => 'civicrm/airmail/settings',
+    'permission' => 'access CiviMail,administer CiviCRM',
+    'operator' => 'AND',
+    'separator' => 1,
+    'active' => 1,
+  );
+  $adder->addItem($attributes, array('Mailings'));
+  $menu = $adder->getMenu();
+}
 
 /**
  * Implements hook_civicrm_config().
@@ -122,31 +157,3 @@ function airmail_civicrm_angularModules(&$angularModules) {
 function airmail_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _airmail_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
-
-// --- Functions below this ship commented out. Uncomment as required. ---
-
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function airmail_civicrm_preProcess($formName, &$form) {
-
-} // */
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
-function airmail_civicrm_navigationMenu(&$menu) {
-  _airmail_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => E::ts('The Page'),
-    'name' => 'the_page',
-    'url' => 'civicrm/the-page',
-    'permission' => 'access CiviReport,access CiviContribute',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _airmail_civix_navigationMenu($menu);
-} // */

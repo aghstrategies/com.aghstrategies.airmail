@@ -27,4 +27,14 @@ interface CRM_Airmail_Backend {
 
   public function processMessages($events);
 
+  /**
+   * Called by hook_civicrm_alterMailParams
+   *
+   * @param array $params
+   *   The mailing params
+   * @param string $context
+   *   The mailing context.
+   */
+  public function alterMailParams(&$params, $context);
+
 }

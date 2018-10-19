@@ -59,4 +59,14 @@ class CRM_Airmail_Backend_Ses implements CRM_Airmail_Backend {
     }
   }
 
+  /**
+   * Called by hook_civicrm_alterMailParams
+   *
+   * @param array $params
+   *   The mailing params
+   * @param string $context
+   *   The mailing context.
+   */
+  public function alterMailParams(&$params, $context) {}
+
 }
