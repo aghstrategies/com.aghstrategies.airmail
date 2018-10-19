@@ -60,8 +60,8 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
 
     parent::postProcess();
 
-    // TODO: why is this commented out?
-    // CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/airmail/settings', 'reset=1'));
+    // Reset the form so the URL reflects the changed secret code:
+    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/airmail/settings', 'reset=1'));
   }
 
   /**
