@@ -32,7 +32,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
    * What should happen if we want to reject the message without processing it.
    */
   protected function invalidMessage() {
-    CRM_Utils_System::setHttpHeader("Status", "404 Not Found");
+    http_response_code(400);
     CRM_Utils_System::civiExit();
   }
 
