@@ -59,7 +59,7 @@ class CRM_Airmail_Backend_Sendgrid implements CRM_Airmail_Backend {
 
         case 'click':
           $params['url'] = $event->url;
-          CRM_Airmail_Utils::click($params);
+          CRM_Airmail_EventAction::click($params);
           break;
       }
     }
