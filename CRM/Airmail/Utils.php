@@ -80,6 +80,10 @@ class CRM_Airmail_Utils {
         'class' => 'CRM_Airmail_Backend_Sendgrid',
         'label' => 'SendGrid',
       ],
+      'Elastic' => [
+        'class' => 'CRM_Airmail_Backend_Elastic',
+        'label' => 'Elastic',
+      ],
     ];
 
     if ($optionList) {
