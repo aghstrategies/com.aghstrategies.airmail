@@ -32,7 +32,8 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
    * What should happen if we want to reject the message without processing it.
    */
   protected function invalidMessage() {
-    http_response_code(400);
+    //This needs to do conditinally for Elsatic email.
+    http_response_code(200);
     CRM_Utils_System::civiExit();
   }
 
