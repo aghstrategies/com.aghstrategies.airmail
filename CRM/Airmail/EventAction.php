@@ -9,6 +9,7 @@ class CRM_Airmail_EventAction {
    *   Params to pass to the CiviCRM API
    */
   public static function bounce($params) {
+    CRM_Core_Error::debug_log_message("Airmail Bounce:\n" . print_r($params, TRUE));
     if (empty($params['body'])) {
       $params['body'] = E::ts('unknown');
     }
@@ -21,6 +22,7 @@ class CRM_Airmail_EventAction {
   }
 
   public static function unsubscribe($params) {
+    CRM_Core_Error::debug_log_message("Airmail Unsubscribe:\n" . print_r($params, TRUE));
     try {
       $result = civicrm_api3('MailingEventUnsubscribe', 'create', $params);
     }
@@ -30,6 +32,7 @@ class CRM_Airmail_EventAction {
   }
 
   public static function spamreport($params) {
+    CRM_Core_Error::debug_log_message("Airmail Spam Report:\n" . print_r($params, TRUE));
     // TODO: This needs to be replaced with something else like in
     // https://github.com/cividesk/com.cividesk.email.sparkpost/blob/master/CRM/Sparkpost/Page/callback.php#L95
     // which isn't ideal but will do the trick.
@@ -44,6 +47,7 @@ class CRM_Airmail_EventAction {
    *   Must include a key `event_queue_id` with the queue of the email
    */
   public function open($params) {
+    CRM_Core_Error::debug_log_message("Airmail Open:\n" . print_r($params, TRUE));
     CRM_Mailing_Event_BAO_Opened::open($params['event_queue_id']);
   }
 
@@ -54,6 +58,7 @@ class CRM_Airmail_EventAction {
    *   The usual `job_id` and `event_queue_id`, plus `url` for the whole URL.
    */
   public function click($params) {
+    CRM_Core_Error::debug_log_message("Airmail Click:\n" . print_r($params, TRUE));
     $mailingId = CRM_Airmail_Utils::mailingIdFromJob($params['job_id']);
     $trackerId = CRM_Mailing_BAO_TrackableURL::getTrackerURLId($params['url'], $mailingId);
     if ($trackerId) {

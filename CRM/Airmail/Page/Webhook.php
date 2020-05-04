@@ -14,8 +14,14 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
       $this->invalidMessage();
     }
 
-    // Process the input
-    $events = $backend->processInput(file_get_contents('php://input'));
+    // Process the input.
+    // Elastic email send parameters in $_REQUEST.
+    if (get_class($backend) == 'CRM_Airmail_Backend_Elastic') {
+      $events = $backend->processInput($_REQUEST);
+    }
+    else {
+      $events = $backend->processInput(file_get_contents('php://input'));
+    }
 
     // Make sure the processed input exists and is valid according to the backend.
     if (!$events || !$backend->validateMessages($events)) {
@@ -32,7 +38,8 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
    * What should happen if we want to reject the message without processing it.
    */
   protected function invalidMessage() {
-    //This needs to do conditinally for Elsatic email.
+    // We may need to log the invalid message entry.
+    // We don't have to do the conditionally for elastic email
     http_response_code(200);
     CRM_Utils_System::civiExit();
   }
