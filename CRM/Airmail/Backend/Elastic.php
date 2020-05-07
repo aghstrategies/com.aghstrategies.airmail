@@ -15,20 +15,13 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   public function processMessages($event) {
     CRM_Core_Error::debug_log_message("Airmail Elastic Request:\n" . print_r($event, TRUE));
     $status = $event['status'];
-    // The target email address is passed in 'to' param.
-    // TODO Confirm below code.
-    $mailingJobInfo = E::parseSourceString($event['to']);
+    $mailingJobInfo = E::parseSourceString($event['from']);
     $params = [
       'job_id' => $mailingJobInfo['job_id'],
       'event_queue_id' => $mailingJobInfo['event_queue_id'],
       'hash' => $mailingJobInfo['hash'],
     ];
     switch ($status) {
-      // When you want to receive notifications for sent emails.
-      case 'Sent':
-        // TODO What to process for this status.
-        break;
-
       // When you want to receive notifications for opened emails.
       case 'Opened':
         CRM_Airmail_EventAction::open($params);
