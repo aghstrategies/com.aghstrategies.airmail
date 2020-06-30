@@ -63,9 +63,11 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   $elastic_categories = array(
     'Away' => array('Unknown'),
     'Relay' => array('Throttled', 'GreyListed', 'Timeout'),
-    'Invalid' => array('NoMailbox', 'NotDelivered', 'DNSProblem', 'AccountProblem', 'SPFProblem'),
+    'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
     'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
     'Abuse' => array('AbuseReport'),
+    'DNS' => array('DNSProblem'),
+    'Inactive' => array('AccountProblem'),
   );
 
   //Default bounce types from civicrm.
@@ -75,6 +77,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     'Invalid' => 6, // hard, retry 1 time
     'Spam' => 10,   // hard, retry 1 time
     'Abuse' => 10,  // hard, retry 1 time
+    'DNS' => 3,
+    'Inactive' => 5,
   );
   foreach ($elastic_categories as $value => $categories) {
     if (in_array($event['category'], $categories)){
