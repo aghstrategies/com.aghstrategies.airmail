@@ -32,7 +32,6 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
       case 'Error':
         // Add bounce report in CiviCRM.
         CRM_Airmail_EventAction::bounce($params);
-        CRM_Core_Error::debug_log_message("Bounce Error:\n" . print_r($event, TRUE));
         break;
     }
   }
@@ -47,7 +46,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
    */
   public function alterMailParams(&$params, $context) {
     // Add custom headers for ElasticEmail
-    // This is required so we will get postback in Elastic email response.
+    // This is required so we will get postback URL in Elastic email response,
+    // and can then identify the mailing item, source contact, etc.
     if ($context != 'messageTemplate') {
       if (!array_key_exists('headers', $params)) $params['headers'] = array();
       $params['headers']['X-ElasticEmail-Postback'] = $params['Return-Path'];
@@ -58,56 +58,60 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   *
   * Function for getting bounce type and message.
   */
- public function getBounceTypeMessages($event) {
-  //Elastic Email bounce categories.
-  $elastic_categories = array(
-    'Away' => array('Unknown'),
-    'Relay' => array('Throttled', 'GreyListed', 'Timeout'),
-    'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
-    'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
-    'Abuse' => array('AbuseReport'),
-    'DNS' => array('DNSProblem'),
-    'Inactive' => array('AccountProblem'),
-  );
+  public function getBounceTypeMessages($event) {
+    //Elastic Email bounce categories.
+    $elastic_categories = array(
+      'Away' => array('Unknown'),
+      'Relay' => array('Throttled', 'GreyListed', 'Timeout'),
+      'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
+      'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
+      'Abuse' => array('AbuseReport'),
+      'DNS' => array('DNSProblem'),
+      'Inactive' => array('AccountProblem'),
+    );
 
-  //Default bounce types from civicrm.
-  $civicrm_bounces = array(
-    'Away' => 2,    // soft, retry 30 times
-    'Relay' => 9,   // soft, retry 3 times
-    'Invalid' => 6, // hard, retry 1 time
-    'Spam' => 10,   // hard, retry 1 time
-    'Abuse' => 10,  // hard, retry 1 time
-    'DNS' => 3,
-    'Inactive' => 5,
-  );
-  foreach ($elastic_categories as $value => $categories) {
-    if (in_array($event['category'], $categories)){
-      $bounce_type_id = $civicrm_bounces[$value];
+    //Default bounce types from civicrm.
+    $civicrm_bounces = array(
+      'Away' => 2,    // soft, retry 30 times
+      'Relay' => 9,   // soft, retry 3 times
+      'Invalid' => 6, // hard, retry 1 time
+      'Spam' => 10,   // hard, retry 1 time
+      'Abuse' => 10,  // hard, retry 1 time
+      'DNS' => 3,
+      'Inactive' => 5,
+    );
+    foreach ($elastic_categories as $value => $categories) {
+      if (in_array($event['category'], $categories)){
+         $bounce_type_id = $civicrm_bounces[$value];
+      }
     }
-  }
-  // As we don't have any resaon in Elastic Email response.
-  // Mapping of the bounce resaon with Elastic Email short messages. Refer: https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
-  $elastic_mail_messgaes = array(
-    'Unknown' => 'Unknown Error',
-    'Throttled' => 'The recipient server did not accept the email within 48 hours',
-    'GreyListed' => 'The email was not delivered because the recipient server has determined that this email has not been seen in the configuration provide',
-    'Timeout' => 'The email was not delivered because a timeout occurred',
-    'NoMailbox' => 'The email address does not appear to exist',
-    'NotDelivered' => 'The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
-    'DNSProblem' => 'The domain part of the address does not exist',
-    'AccountProblem' => 'There is something wrong with the mailbox of the recipient, eg. the mailbox is full and cannot accept more emails',
-    'SPFProblem' => 'The email was not delivered because there was an issue validating the SPF record for the domain of this email',
-    'ContentFilter' => 'Unknown Error',
-    'Spam' => 'The email was rejected because it matched a profile the internet community has labeled as Spam',
-    'Blacklisted' => 'Email is black listed',
-    'ConnectionTerminated' => 'The status of the email is not known for sure because the recipient server terminated the connection without returning a message code or status',
-    'ConnectionProblem' => 'The email was not delivered because of a connection problem',
-    'AbuseReport' => 'Unknown Error',
-  );
-  $bounce_reason = $elastic_mail_messgaes[$event['category']];
-  return array(
-           'bounce_type_id' =>  $bounce_type_id,
-           'bounce_reason' => $bounce_reason,
-         );
+
+    // Add a description for the cause of the bounce (map from Elastic Email bounce category).
+    // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
+    $elastic_mail_messages = array(
+      'Unknown' => 'Unknown Error',
+      'Throttled' => 'The recipient server did not accept the email within 48 hours',
+      'GreyListed' => 'The email was not delivered because the recipient server has determined that this email has not been seen in the configuration provide',
+      'Timeout' => 'The email was not delivered because a timeout occurred',
+      'NoMailbox' => 'The email address does not appear to exist',
+      'NotDelivered' => 'The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
+      'DNSProblem' => 'The domain part of the address does not exist',
+      'AccountProblem' => 'There is something wrong with the mailbox of the recipient, eg. the mailbox is full and cannot accept more emails',
+      'SPFProblem' => 'The email was not delivered because there was an issue validating the SPF record for the domain of this email',
+      'ContentFilter' => 'Unknown Error',
+      'Spam' => 'The email was rejected because it matched a profile the internet community has labeled as Spam',
+      'Blacklisted' => 'Email is black listed',
+      'ConnectionTerminated' => 'The status of the email is not known for sure because the recipient server terminated the connection without returning a message code or status',
+      'ConnectionProblem' => 'The email was not delivered because of a connection problem',
+      'AbuseReport' => 'Unknown Error',
+    );
+    if (array_key_exists($event['category'], $elastic_mail_messages)) {
+      $bounce_reason = $elastic_mail_messages[$event['category']];
+    } else {
+      $bounce_reason = 'Unknown';
+    }
+
+    // return CiviCRM bounce code and description.
+    return ['bounce_type_id' =>  $bounce_type_id, 'bounce_reason' => $bounce_reason];
   }
 }
