@@ -82,7 +82,7 @@ class CRM_Airmail_Utils {
       ],
       'Elastic' => [
         'class' => 'CRM_Airmail_Backend_Elastic',
-        'label' => 'Elastic',
+        'label' => 'ElasticEmail',
       ],
     ];
 
