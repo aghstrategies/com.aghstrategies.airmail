@@ -23,6 +23,7 @@ Wordpress Ex: http://{yourDomain}/civicrm?civiwp=CiviCRM&q=civicrm/airmail/webho
 ### Configuration specific to your SMTP Service
 + [Amazon SES specfic Configuration](/docs/ses.md)
 + [SendGrid specific Configuration](/docs/Sendgrid.md)
++ [ElasticEmail specific Configuration](/docs/Elastic.md)
 
 ### To Dos:
 + Deal with all Event Types including "Reject", "Send", "Delivery", "Click", "Open", and "Rendering Failure"
