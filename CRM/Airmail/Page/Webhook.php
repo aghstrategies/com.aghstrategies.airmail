@@ -38,9 +38,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
    * What should happen if we want to reject the message without processing it.
    */
   protected function invalidMessage() {
-    // We may need to log the invalid message entry.
-    // We don't have to do the conditionally for elastic email
-    http_response_code(200);
+    http_response_code(400);
     CRM_Utils_System::civiExit();
   }
 
