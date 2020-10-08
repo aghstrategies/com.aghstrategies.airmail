@@ -5,7 +5,8 @@ use CRM_Airmail_Utils as E;
 class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
 
   public function processInput($input) {
-    return $input;
+    // ElasticEmail sends parameters in $_GET
+    return $_GET;
   }
 
   public function validateMessages($event) {

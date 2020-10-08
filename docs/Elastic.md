@@ -1,6 +1,6 @@
 # ElasticEmail Specific Configuration
 
-## Settings in CiviCRM
+ATTENTION: the HTTP Web Notifications (Webhooks) feature is only available in the Unlimited Pro and Email API PRO plans. This feature is needed for this extension, so make sure your plan includes it. Source: https://help.elasticemail.com/en/articles/2376855-how-to-manage-http-web-notifications-webhooks
 
 ## Settings in ElasticEmail
 Log in to ElasticEmail, go to the Settings menu, then select the Notifications tab.

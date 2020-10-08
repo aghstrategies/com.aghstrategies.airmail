@@ -15,13 +15,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
     }
 
     // Process the input.
-    // Elastic email send parameters in $_REQUEST.
-    if (get_class($backend) == 'CRM_Airmail_Backend_Elastic') {
-      $events = $backend->processInput($_REQUEST);
-    }
-    else {
-      $events = $backend->processInput(file_get_contents('php://input'));
-    }
+    $events = $backend->processInput(file_get_contents('php://input'));
 
     // Make sure the processed input exists and is valid according to the backend.
     if (!$events || !$backend->validateMessages($events)) {
