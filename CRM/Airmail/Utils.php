@@ -124,6 +124,7 @@ class CRM_Airmail_Utils {
       $settings = array(
         'secretcode' => NULL,
         'external_smtp_service' => NULL,
+        'ee_wrapunsubscribe' => NULL,
       );
       foreach ($settings as $setting => $val) {
         try {

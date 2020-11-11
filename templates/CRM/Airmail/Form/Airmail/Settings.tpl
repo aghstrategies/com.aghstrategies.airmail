@@ -12,6 +12,13 @@
       <td>{$form.external_smtp_service.html}<br />
       </td>
     </tr>
+
+    <tr>
+      <td>{ts}Elastic Email only{/ts}</td>
+      <td>{$form.ee_wrapunsubscribe.html} {$form.ee_wrapunsubscribe.label}
+        <p>Checking this box without first negotiating this with Elastic Email will mean you are no longer to email anyone who unsubscribes to any group. See documentation!</p>
+      </td>
+    </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl"}</div>
   <div class="spacer"></div>

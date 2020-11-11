@@ -26,6 +26,10 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
       ),
     ));
 
+    // It would be nicer if this was modularised.
+    //$eeUnsubscribeWrap = $this->add('checkbox', 'ee_wrapunsubscribe', E::ts('Elastic Email’s Track Stats Only flag has been negotiated for the sending domain.'), $attr, FALSE);
+    $eeUnsubscribeWrap = $this->addElement('checkbox', 'ee_wrapunsubscribe', E::ts('Elastic Email’s Track Stats Only flag has been negotiated for the sending domain.'));
+
     $settings = E::getSettings();
     $this->setDefaults($settings);
     $this->assign('url', $this->getUrl());
@@ -51,10 +55,8 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
     // save settings to database
     $vars = $this->getSubmitValues();
     $settings = E::getSettings();
-    foreach ($vars as $k => $v) {
-      if (array_key_exists($k, $settings)) {
-        $settings[$k] = $v;
-      }
+    foreach ($settings as $k => $oldValue) {
+      $settings[$k] = $vars[$k] ?? NULL;
     }
     E::saveSettings($settings);
 

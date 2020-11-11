@@ -52,6 +52,40 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     if ($context != 'messageTemplate') {
       if (!array_key_exists('headers', $params)) $params['headers'] = array();
       $params['headers']['X-ElasticEmail-Postback'] = $params['Return-Path'];
+
+      // Elastic Email insists that we wrap our unsubscribe links so they can
+      // monitor it. If we don't do this then they will add an unsubscribe
+      // footer of their own which won't use CiviCRM's unsubscribe and is
+      // therefore not usually what we want.
+      //
+      // The following tries to identify CiviCRM unsubscribe links and
+      // wraps them so
+      // <a href="https://eg.com/civicrm/mailing/unsubscribe?x=y">unsub</a>
+      // becomes
+      // <a href="{unsubscribe:https://eg.com/civicrm/mailing/unsubscribe?x=y">unsub</a>}>
+      //
+      // We only do this if ee_wrapunsubscribe is set. See documentation.
+      //
+      // Which means we get EE's and CiviCRM's unsubscribe operations. Howwver
+      // this also causes problems: it's a group-specific CiviCRM unsubscribe,
+      // but an email-specific EE unsubscribe, which means we'll never be able
+      // to email that address again; so unsubscribing from a newsletter could
+      // mean you no longer get receipts, or member benefits or other
+      // newsletters etc.
+      //
+      $settings = E::getSettings();
+      if (!empty($settings['ee_wrapunsubscribe'])) {
+        $params['html'] = preg_replace(
+            '@(href=(["\']))(https?://.*?civicrm/mailing/unsubscribe.*?)\2@',
+            '$1{unsubscribe:$3}$2',
+            $params['html']);
+      }
+
+      // Since we're capable of and our users are data controllers responsible
+      // for handling unsubscribes ourselves, we can avert EE's link additons
+      // by hiding their unsubscribe link.
+      $params['html'] .= '<!--<a href="{unsubscribe}"></a>-->';
+
     }
   }
 
@@ -62,8 +96,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   public function getBounceTypeMessages($event) {
     //Elastic Email bounce categories.
     $elastic_categories = array(
-      'Away' => array('Unknown'),
-      'Relay' => array('Throttled', 'GreyListed', 'Timeout'),
+      'Away' => array('Throttled', 'GreyListed', 'Unknown'),
+      'Relay' => array('Timeout'),
       'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
       'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
       'Abuse' => array('AbuseReport'),
