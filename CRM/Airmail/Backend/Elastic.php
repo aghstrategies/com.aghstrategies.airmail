@@ -51,7 +51,9 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     // and can then identify the mailing item, source contact, etc.
     if ($context != 'messageTemplate') {
       if (!array_key_exists('headers', $params)) $params['headers'] = array();
-      $params['headers']['X-ElasticEmail-Postback'] = $params['Return-Path'];
+      if (!empty($params['Return-Path'])) {
+        $params['headers']['X-ElasticEmail-Postback'] = $params['Return-Path'];
+      }
 
       // Elastic Email insists that we wrap our unsubscribe links so they can
       // monitor it. If we don't do this then they will add an unsubscribe
