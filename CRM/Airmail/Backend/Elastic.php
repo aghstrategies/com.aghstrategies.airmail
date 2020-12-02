@@ -82,10 +82,17 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
             '$1{unsubscribe:$3}$2',
             $params['html']);
       }
+      // Always wrap the optout.
+      $params['html'] = preg_replace(
+          '@(href=(["\']))(https?://.*?civicrm/mailing/optout.*?)\2@',
+          '$1{unsubscribe:$3}$2',
+          $params['html']);
 
       // Since we're capable of and our users are data controllers responsible
       // for handling unsubscribes ourselves, we can avert EE's link additons
-      // by hiding their unsubscribe link.
+      // by hiding their unsubscribe link. However you must still ensure your
+      // use of their service is within the T&C; they do require that every email
+      // has a working unsubscribe/optout link.
       $params['html'] .= '<!--<a href="{unsubscribe}"></a>-->';
 
     }
