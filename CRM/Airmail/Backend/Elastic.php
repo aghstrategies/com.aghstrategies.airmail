@@ -60,33 +60,38 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
       // footer of their own which won't use CiviCRM's unsubscribe and is
       // therefore not usually what we want.
       //
-      // The following tries to identify CiviCRM unsubscribe links and
+      // The following tries to identify CiviCRM unsubscribe and optout links and
       // wraps them so
       // <a href="https://eg.com/civicrm/mailing/unsubscribe?x=y">unsub</a>
       // becomes
       // <a href="{unsubscribe:https://eg.com/civicrm/mailing/unsubscribe?x=y">unsub</a>}>
       //
-      // We only do this if ee_wrapunsubscribe is set. See documentation.
+      // This is always done for optout links (the "no bulk mail"), but is only
+      // done for group-specific unsubscribe links if ee_wrapunsubscribe is
+      // set.
       //
-      // Which means we get EE's and CiviCRM's unsubscribe operations. Howwver
-      // this also causes problems: it's a group-specific CiviCRM unsubscribe,
-      // but an email-specific EE unsubscribe, which means we'll never be able
-      // to email that address again; so unsubscribing from a newsletter could
-      // mean you no longer get receipts, or member benefits or other
-      // newsletters etc.
+      // See documentation.
       //
       $settings = E::getSettings();
-      if (!empty($settings['ee_wrapunsubscribe'])) {
-        $params['html'] = preg_replace(
-            '@(href=(["\']))(https?://.*?civicrm/mailing/unsubscribe.*?)\2@',
-            '$1{unsubscribe:$3}$2',
-            $params['html']);
+
+      // Nb. the patterns differ in whether it's href='foo' or href="foo"
+      if (empty($settings['ee_wrapunsubscribe'])) {
+        // Only wrap optout links.
+        $patterns = [
+          '@href=(")(https?://[^"]+?civicrm/mailing/optout[^"]+?)(")@',
+          "@href=(')(https?://[^']+?civicrm/mailing/optout[^']+?)(')@",
+        ];
       }
-      // Always wrap the optout.
-      $params['html'] = preg_replace(
-          '@(href=(["\']))(https?://.*?civicrm/mailing/optout.*?)\2@',
-          '$1{unsubscribe:$3}$2',
-          $params['html']);
+      else {
+        // Wrap optout and unsubscribe.
+        $patterns = [
+          '@href=(")(https?://[^"]+?civicrm/mailing/(?:unsubscribe|optout)[^"]+?)(")@',
+          "@href=(')(https?://[^']+?civicrm/mailing/(?:unsubscribe|optout)[^']+?)(')@",
+        ];
+      }
+
+      // Apply the patterns.
+      $params['html'] = preg_replace($patterns, 'href=$1{unsubscribe:$2}$3', $params['html']);
 
       // Since we're capable of and our users are data controllers responsible
       // for handling unsubscribes ourselves, we can avert EE's link additons
