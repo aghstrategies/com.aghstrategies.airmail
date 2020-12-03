@@ -1,5 +1,6 @@
 This Extension:
 --------------
+
 Process Bulk CiviMail responses for a variety of SMTP Services including:
 
 - Amazon SES
@@ -28,7 +29,7 @@ Wordpress Ex: http://{yourDomain}/civicrm?civiwp=CiviCRM&q=civicrm/airmail/webho
 
 + [Amazon SES specfic Configuration](/docs/ses.md)
 + [SendGrid specific Configuration](/docs/Sendgrid.md)
-+ [ElasticEmail specific Configuration](/docs/Elastic.md)
++ [Elastic Email specific Configuration](/docs/Elastic.md)
 
 ### To Dos:
 

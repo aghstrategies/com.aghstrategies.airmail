@@ -14,27 +14,76 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   }
 
   public function processMessages($event) {
-    $status = $event['status'];
-    //Parse postback url to get all required mailing information.
+
+    // Parse postback url to get all required mailing information.
     $mailingJobInfo = E::parseSourceString($event['postback']);
-    //Map Elastic email bounce types and resoan with CiviCRM.
-    $bounce_details = self::getBounceTypeMessages($event);
-    $params = [
-      'job_id' => $mailingJobInfo['job_id'],
+    $commonEventParams = [
+      'job_id'         => $mailingJobInfo['job_id'],
       'event_queue_id' => $mailingJobInfo['event_queue_id'],
-      'hash' => $mailingJobInfo['hash'],
-      'bounce_type_id' => $bounce_details['bounce_type_id'],
-      'bounce_reason' => $bounce_details['bounce_reason'],
+      'hash'           => $mailingJobInfo['hash'],
     ];
-    switch ($status) {
+
+    // 2020-12-03 Status values are defined as one of:
+    // Sent, Opened, Clicked, Error, AbuseReport, Unsubscribed
+    // https://help.elasticemail.com/en/articles/2376855-how-to-manage-http-web-notifications-webhooks
+    switch ($event['status']) {
       // When you want to receive notifications for bounced emails.
-      case 'Bounce / Error':
-      case 'Bounce':
       case 'Error':
-        // Add bounce report in CiviCRM.
-        CRM_Airmail_EventAction::bounce($params);
+        // Map Elastic email bounce types and resoan with CiviCRM.
+        $bounce_details = $this->getBounceTypeMessages($event);
+        if (!$bounce_details['bounce_type_id']) {
+          // No bounce type, don't record a bounce.
+          // Log it though, because it's unusual.
+          Civi::log()->notice('Unrecognised Elastic Email webhook event received: '
+            . $bounce_details['bounce_reason']
+            . "Event data: " . json_encode($event));
+          return;
+        }
+        $commonEventParams = $commonEventParams + $bounce_details;
+        CRM_Airmail_EventAction::bounce($commonEventParams);
         break;
+
+      case 'AbuseReport':
+        $commonEventParams += [
+          'bounce_type_id' => 10,
+          'bounce_reason'  => 'Abuse reported by user'
+        ];
+        CRM_Airmail_EventAction::bounce($commonEventParams);
+        break;
+
+      case 'Sent':
+      case 'Opened':
+      case 'Clicked':
+        // We do not take any action.
+        break;
+
+      case 'Unsubscribed':
+        // This will happen if the user used an Elastic Email unsubscribe link.
+        //
+        // Discussion:
+        //
+        // If they used EE's default unsubscribe link, it means Elastic will
+        // never email them again, so it's like CiviCRM's optout, in which case
+        // we might process like this:
+        //
+        // CRM_Airmail_EventAction::unsubscribe($commonEventParams + ['org_unsubscribe' => 1]);
+        //
+        // However, we could also get sent these events when we have wrapped
+        // their unsubscribe link in ours, in which case we've already handled
+        // the unsubscribe, which could have been just to a list (not a global
+        // opt-out) and so doing the above would be bad.
+        //
+        // Therefore, for now, this does nothing.
+        //
+        // Ideally, things are configured so that every EE unsubscribe link wraps around
+        // a CiviCRM one, in which case, ignoring this is fine.
+        break;
+
+      default:
+        Civi::log()->error("Elastic Email webhook received with undocumented status: " . json_encode($event['status']));
     }
+
+
   }
 
   /**
@@ -104,63 +153,64 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   }
 
  /**
+  * Translate Elastic Email event category to bounce type and message.
   *
-  * Function for getting bounce type and message.
+  * @param Array $event
+  *
+  * @return Array with keys: bounce_type_id and bounce_reason
   */
   public function getBounceTypeMessages($event) {
-    //Elastic Email bounce categories.
-    $elastic_categories = array(
-      'Away' => array('Throttled', 'GreyListed', 'Unknown'),
-      'Relay' => array('Timeout'),
-      'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
-      'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
-      'Abuse' => array('AbuseReport'),
-      'DNS' => array('DNSProblem'),
-      'Inactive' => array('AccountProblem'),
-    );
 
-    //Default bounce types from civicrm.
-    $civicrm_bounces = array(
-      'Away' => 2,    // soft, retry 30 times
-      'Relay' => 9,   // soft, retry 3 times
-      'Invalid' => 6, // hard, retry 1 time
-      'Spam' => 10,   // hard, retry 1 time
-      'Abuse' => 10,  // hard, retry 1 time
-      'DNS' => 3,
-      'Inactive' => 5,
-    );
-    foreach ($elastic_categories as $value => $categories) {
-      if (in_array($event['category'], $categories)){
-         $bounce_type_id = $civicrm_bounces[$value];
-      }
-    }
+    // 2020-12-03: Elastic Email's devs confirmed that the following list provides the correct reference
+    // https://api.elasticemail.com/public/help#classes_MessageCategory
+    // CiviCRM's types are found in the civicrm_mailing_bounce_type table.
+    $mapElasticCategoryToCiviBounceType = [
+      'AccountProblem'        => 8,  // Quota    3 tries
+      'BlackListed'           => 10, // Spam    immediate hold
+      'CodeError'             => 2,  // Away    30 tries
+      'ConnectionProblem'     => 11, // Syntax   3 tries
+      'ConnectionTerminated'  => 10, // Spam    immediate hold
+      'DNSProblem'            => 3,  // DNS      3 tries
+      'GreyListed'            => 2,  // Away    30 tries
+      'Ignore'                => NULL, // ? huh? Exists in documentation without definition
+      'ManualCancel'          => 6,  // Invalid immediate hold
+      'NoMailbox'             => 6,  // Invalid immediate hold
+      'NotDelivered'          => 6,  // Invalid immediate hold
+      'NotDeliveredCancelled' => 6,  // Invalid immediate hold ??? undocumented.
+      'SPFProblem'            => 11, // Syntax   3 tries
+      'Spam'                  => 10, // Spam    immediate hold
+      'Throttled'             => 2,  // Away    30 tries
+      'Timeout'               => 9,  // Relay    3 tries
+      'Unknown'               => 2,  // Away    30 tries
+    ];
+
+    $bounce_type_id = $mapElasticCategoryToCiviBounceType[$event['category']] ?? NULL;
+    $category = $bounce_type_id ?? 'Undocumented';
 
     // Add a description for the cause of the bounce (map from Elastic Email bounce category).
     // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
-    $elastic_mail_messages = array(
-      'Unknown' => 'Unknown Error',
-      'Throttled' => 'The recipient server did not accept the email within 48 hours',
-      'GreyListed' => 'The email was not delivered because the recipient server has determined that this email has not been seen in the configuration provide',
-      'Timeout' => 'The email was not delivered because a timeout occurred',
-      'NoMailbox' => 'The email address does not appear to exist',
-      'NotDelivered' => 'The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
-      'DNSProblem' => 'The domain part of the address does not exist',
-      'AccountProblem' => 'There is something wrong with the mailbox of the recipient, eg. the mailbox is full and cannot accept more emails',
-      'SPFProblem' => 'The email was not delivered because there was an issue validating the SPF record for the domain of this email',
-      'ContentFilter' => 'Unknown Error',
-      'Spam' => 'The email was rejected because it matched a profile the internet community has labeled as Spam',
-      'Blacklisted' => 'Email is black listed',
-      'ConnectionTerminated' => 'The status of the email is not known for sure because the recipient server terminated the connection without returning a message code or status',
-      'ConnectionProblem' => 'The email was not delivered because of a connection problem',
-      'AbuseReport' => 'Unknown Error',
-    );
-    if (array_key_exists($event['category'], $elastic_mail_messages)) {
-      $bounce_reason = $elastic_mail_messages[$event['category']];
-    } else {
-      $bounce_reason = 'Unknown';
-    }
+    $mapCategoryToMessage = [
+      'AccountProblem'        => 'There is something wrong with the mailbox of the recipient, eg. the mailbox is full and cannot accept more emails',
+      'Blacklisted'           => 'Email is black listed',
+      'CodeError'             => 'Error at Elastic Email; will be retried; Contact Elastic Email if a recurring problem.',
+      'ConnectionProblem'     => 'The email was not delivered because of a connection problem',
+      'ConnectionTerminated'  => 'The status of the email is not known for sure because the recipient server terminated the connection without returning a message code or status',
+      'DNSProblem'            => 'The domain part of the address does not exist',
+      'GreyListed'            => 'Greylisted, will be retried automatically: The email was not delivered because the recipient server has determined that this email has not been seen in the configuration provide',
+      'Ignore'                => '"Ignore". Presumably will be retried automatically?',
+      'ManualCancel'          => 'Email canceled by an Elastic Email administrator or you canceled the email yourself from the Elastic Email website',
+      'NoMailbox'             => 'The email address does not appear to exist',
+      'NotDelivered'          => 'The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
+      'NotDeliveredCancelled' => '(undocumented) The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
+      'SPFProblem'            => 'The email was not delivered because there was an issue validating the SPF record for the domain of this email',
+      'Spam'                  => 'The email was rejected because it matched a profile the internet community has labeled as Spam',
+      'Throttled'             => 'The recipient server did not accept the email within 48 hours',
+      'Timeout'               => 'The email was not delivered because a timeout occurred',
+      'Unknown'               => 'Unknown Error',
+      'Undocumented'          => "Received undocumented category '$event[category]'",
+    ];
 
     // return CiviCRM bounce code and description.
-    return ['bounce_type_id' =>  $bounce_type_id, 'bounce_reason' => $bounce_reason];
+    return ['bounce_type_id' =>  $bounce_type_id, 'bounce_reason' => $mapCategoryToMessage[$category]];
   }
 }
