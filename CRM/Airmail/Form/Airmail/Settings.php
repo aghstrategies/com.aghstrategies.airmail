@@ -47,7 +47,11 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
    */
   public function getUrl() {
     $settings = E::getSettings();
-    $q = empty($settings['secretcode']) ? 'reset=1' : "reset=1&secretcode={$settings['secretcode']}";
+    $q = ['reset' => 1];
+    if (!empty($settings['secretcode'])) {
+      $q['secretcode'] = $settings['secretcode'];
+    }
+    $q = http_build_query($q, '', '&', PHP_QUERY_RFC3986);
     return CRM_Utils_System::url('civicrm/airmail/webhook', $q, TRUE, NULL, FALSE, TRUE);
   }
 
