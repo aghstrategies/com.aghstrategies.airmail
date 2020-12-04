@@ -17,25 +17,15 @@ class CRM_Airmail_Form_DeleteMyEmail extends CRM_Core_Form {
   public $submitOnce = TRUE;
 
   protected $_hasBeenDone = FALSE;
+  protected $_showForm = FALSE;
 
   public function preProcess() {
-    error_log("preProcess running");
-  }
-  public function buildQuickForm() {
-    error_log("buildQuickForm running");
+    if ($_GET['reset'] ?? 0) {
+      $contactID = (int) ($_GET['cid'] ?? 0);
+      $checksum = $_GET['cs'] ?? '';
+      $emailID = (int) ($_GET['eid'] ?? 0);
+      $error = NULL;
 
-    // @todo check hash.
-    $contactID = (int) ($_GET['cid'] ?? 0);
-    $checksum = $_GET['cs'] ?? '';
-    $emailID = (int) ($_GET['eid'] ?? 0);
-
-    $authorized = FALSE;
-    $error = NULL;
-
-    if (!empty($_GET['completed']) || $this->_hasBeenDone) {
-      // Completed, or being processed.
-    }
-    else {
       if (($contactID > 0) && $checksum && ($emailID > 0)) {
         // Check checksum
         if (CRM_Contact_BAO_Contact_Utils::validChecksum($contactID, $checksum)) {
@@ -49,8 +39,12 @@ class CRM_Airmail_Form_DeleteMyEmail extends CRM_Core_Form {
             $error = E::ts('Your email has already been deleted.');
           }
           else {
-            $this->assign('email', preg_replace('/^(.).*?@(..).*(\.[^.]+)$/', '$1***@$2***$3', $email['email']));
-            $authorized = TRUE;
+            // Set data that then remains set throughout the form's lifecycle.
+            $this->set('emailShown', preg_replace('/^(.).*?@(..).*(\.[^.]+)$/', '$1***@$2***$3', $email['email']));
+            $this->set('contactID', $contactID);
+            $this->set('emailID', $emailID);
+            // This is only set during one phase, it is not stored for the later POST request.
+            $this->_showForm = TRUE;
           }
         }
         else {
@@ -62,15 +56,13 @@ class CRM_Airmail_Form_DeleteMyEmail extends CRM_Core_Form {
       }
     }
 
-    $this->assign('authorized', $authorized);
     if ($error) {
       CRM_Core_Session::setStatus($error, 'Error', 'crm-error no-popup');
     }
-
-    // add form elements
-    $this->add( 'hidden', 'cs', $checksum);
-    $this->add( 'hidden', 'emailID', $emailID);
-    $this->add( 'hidden', 'contactID', $contactID);
+  }
+  public function buildQuickForm() {
+    $this->assign('showForm', $this->_showForm);
+    $this->assign('email', $this->get('emailShown'));
 
     $this->addRadio(
       'optoutoptions', // field name
@@ -103,7 +95,7 @@ class CRM_Airmail_Form_DeleteMyEmail extends CRM_Core_Form {
     $values = $this->exportValues();
 
     // Always set optout
-    $contactID = $values['contactID'];
+    $contactID = $this->get('contactID');
     if (!$contactID) {
       // Should never happen.
       throw new \InvalidArgumentException("Missing Contact ID");
@@ -116,37 +108,20 @@ class CRM_Airmail_Form_DeleteMyEmail extends CRM_Core_Form {
       ->execute();
     $message = E::ts("You have opted-out of all bulk emails");
 
-    if ($values['optoutoptions'] === 'delete') {
+    if ($values['optoutoptions'] === 'delete' && ($this->get('emailID') ?? NULL) > 0) {
       // Delete their email.
       \Civi\Api4\Email::delete(FALSE)
         ->setCheckPermissions(FALSE)
-        ->addWhere('id', '=', $emailID)
+        ->addWhere('id', '=', $this->get('emailID'))
         ->addWhere('contact_id', '=', $contactID)
         ->execute();
       $message = E::ts("You have opted-out of all bulk emails and your email has been deleted.");
     }
 
     CRM_Core_Session::setStatus($message, 'Success', 'crm-success no-popup');
-    $this->_hasBeenDone = TRUE;
-    error_log("done all processing");
     parent::postProcess();
-    error_log("calling redirect");
 
-    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/deletemyemail', ['completed' => 1]));
-  }
-
-  public function getColorOptions() {
-    $options = array(
-      '' => E::ts('- select -'),
-      '#f00' => E::ts('Red'),
-      '#0f0' => E::ts('Green'),
-      '#00f' => E::ts('Blue'),
-      '#f0f' => E::ts('Purple'),
-    );
-    foreach (array('1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e') as $f) {
-      $options["#{$f}{$f}{$f}"] = E::ts('Grey (%1)', array(1 => $f));
-    }
-    return $options;
+    CRM_Utils_System::redirect(CRM_Utils_System::url('civicrm/deletemyemail'));
   }
 
   /**
