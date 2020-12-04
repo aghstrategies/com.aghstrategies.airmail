@@ -10,50 +10,68 @@ Create a new webhook by clicking on the (+) button on the right side and give it
 
 You'll also need to ensure that on the main 'Sending' page of their Settings pages, you have checked "Allow custom headers" as this extension relies on that.
 
-## Negotiations with Elastic Email
+(Note: if you want to disable Elastic Email's tracking of opens and clicks - which CiviMail does anyway - you can do so after you have sent your first mailing. Otherwise the admin UI forbids it. You can also ask them to disable this for you, by emailing their support team with your reasons.)
 
-Elastic Email's main business is providing a full email marketing solution, not just a SMTP relay. This causes some friction because it means their primary way of working is basically a second CRM with a lot of the same data in as CiviCRM has. This extension works on the idea that we're only interested in the SMTP relay part of Elastic Email's offering; keeping two CRMs in sync is a nightmare thing to have to do and would definitely be out of scope for this extension.
 
-With the default set-up at Elastic Email several things will happen that you probably don't want:
+## Complying with Elastic Email's Unsubscribe link requirements
 
-### Unsubscribe
-
-CiviMail generates unsubscribe links that will remove the contact from the group that the mailing was sent to (that's the 90% case anyway, it's a little more complex than that).
-
-CiviCRM does NOT generate unsubscribe links for non-CiviMail emails. Such emails are typically transactional, so unsubscribe doesn't make sense.
-
-However, **Elastic Email requires that its own Unsubscribe link is present, and will add it at the bottom of all emails that don't contain it. This causes big problems**:
+**Elastic Email requires that its own Unsubscribe link is present in all emails. It you don‘t add it they will inject it into your mailings for you. This will cause big problems.**
 
 - CiviCRM won't know about it.
 
 - Elastic Email will suppress all future emails to that email address.
 
-   - if someone is subscribed to two groups in CiviCRM, unsubscribing with the Elastic Email unsubscribe link effectively unsubscribes them from both (and any future groups they subscribe to and any future transactional emails like receipts)
+- If someone is subscribed to two groups in CiviCRM, unsubscribing with the Elastic Email unsubscribe link effectively unsubscribes them from both (and any future groups they subscribe to and any future transactional emails like receipts)
 
-   - if one incumbant of campaigner@example.org unsubscribes, a future staff member could not be resubscribed.
+- If one incumbant of campaigner@example.org unsubscribes, a future staff member could not be resubscribed.
+
+- If you provide a new email address for someone, then that could get used despite their having "unsubscribed" via Elastic Email, since they only go on the email address.
 
 - It's not possible for CiviCRM to re-subscribe someone unsubscribed this way; you need to manually use a special form from Elastic Email which will send a very generic confirmation email. This seems unlikely to be successful.
 
-To avoid this and protect your data, the extesion will add a hidden (in the HTML at least) version of the Elastic Email unsubscribe link. This effectively bypasses their checks, and bypasses Elastic Email's ability to monitor unsubscribes; it's not ideal and is there to protect your data first and foremost, but it may put you outside of their terms of use, so read on.
+Why? Elastic Email's main business is providing a full email marketing solution, not just a SMTP relay. This causes some friction because it means their primary way of working is basically a second CRM with a lot of the same data in as CiviCRM has. This extension works on the idea that we're only interested in the SMTP relay part of Elastic Email's offering; keeping two CRMs in sync is a nightmare thing to have to do and would definitely be out of scope for this extension.
 
-It's better if we can play nicely, but this is a pretty fundamental mismatch of what we need (general SMTP relay for "marketing", transactional and other mail) vs the service they offer (marketing-focus), so some compromise is required.
+## Compliance: default option
 
-You can contact Elastic Email and request that they turn on a flag on your domain called "Track stats only". They don't make this publicly available, so you'll have to justify why. What it means is that someone clicking their Unsubscribe link gets recorded as an unsubscribe, but nothing happens. On its own, this breaks unsubscribe, which is not what anybody wants, but when used in conjunction with the related extension setting, it means that CiviCRM's unsubscribe links get wrapped in a special syntax that means Elastic Email will be able to register the unsubscribe before redirecting to CiviCRM's normal unsubscribe. If you enable that option without having negotiated this with Elastic Email then you will have the problems outlined above.
+- For CiviMail: provide a prominent Unsubscribe link that uses the `{action.unsubscribeUrl}` token link. This way people will be able to unsubscribe via CiviCRM in the normal way, without affecting their other subscriptions.
 
-CiviCRM provides the "opt out" setting too, which is a global unsubscribe; ne'er again shall CiviMail mail that contact; this is more akin to Elastic Email's normal unsubscribe, except of course CiviCRM deals with contacts; Elastic Email sees only email addresses (i.e. in CiviCRM one contact may own several email addresses). This extension wraps CiviMail opt out links in Elastic Email's `{unsubscribe}` code, meaning both systems will register it.
+- For CiviMail: *also* provide a less-prominent link that uses the `{action.optOutUrl}` token link. This will get wrapped in Elastic's `{unsubscribe:...}` link, meaning you're compliant. People clicking the link will immediately get unsubscribed by Elastic (so you won't be able to email them again) and will then get through to CiviCRM's normal opt-out page. Unfortunately there's not much point in the confirmation stage of the opt-out page now, but at least if people do complete the form to opt-out then the two CRMs will be in sync.
 
-Elastic Email would prefer organisations had a separate sub account for transactional to bulk mail, but CiviCRM doesn't support this concept.
+- For Message Templates: You can include your own wording around the Elastic Email `{unsubscribe}` token, so you have control.
 
-### Unsubscribe summary
+In either case, if you do not include Elastic's `{unsubscribe}` token (i.e. you didn't include `{action.optOutUrl}` in a CiviMail mailing, or you haven't directly added it in your message template), then it will be injected by this extension.
 
-- Elastic email require one of their unsubscribe links in every email. Their unsubscribe acts on an email (not contact) basis.
+You can to provide some text (on the Airmail settings page) that is injected before the link. e.g. reasonable text might be:
 
-- If you have negotiated the Track Stats Only option and ticked the box on the Airmail settings page: you can use standard CiviMail Unsubscribe and/or Opt-Out links as you would like to. It will be possible to re-subscribe someone.
+> Emails that are not sent to subscribers (e.g. receipts, confirmations etc.) won’t have an unsubscribe link. You can block our use of this email address using the link below, but this will also prevent us sending receipts or confirmations in future.
 
-- If you have not negotiated that, then to comply with their terms of use, you must include one of CiviMail's Opt-Out links. It won't be possible to re-subscribe them from CiviCRM directly.
-
-- For transactional mail you need to include their unsubscribe link to comply with their terms. You may just need to couch it in appropriate language, e.g.  
-
-   > This email was sent to you because you took some action with us, e.g. receipts, confirmations etc. As it was not sent because you are subscribed to a mailng list, there's no "unsubscribe". We are required to provide you with a permanent [opt-out]({unsubscribe}), but if you use that link we won't be able to send you any emails in future, even for confirmations/receipts etc.
+So you can provide suitable text to explain and dissuade people from using that required link. This will cover you from accidental non-compliance with their terms, and will protect you from their easy-sounding but oh-so-wrong "Unsubscribe" link.
 
 
+## Compliance: recommended option
+
+Negotiate the "Track Stats Only" flag on your account with Elastic Email. Once agreed, on the settings page:
+
+1. check the box saying you've agreed that.
+
+2. You still need to enter suitable text for the fallback link, but hopefully that won’t need to be used (read below).
+
+3. click Save.
+
+Then:
+
+- use the normal `{action.unsubscribeUrl}` and `{action.optOutUrl}` based links in your CiviMail mailings. Each of these will be wrapped by Elastic's `{unsubscribe}` token, so they'll be happily able to monitor that, but it will no longer prevent you mailing that email address, and the user will see CiviCRM's normal unsubscribe/opt-out confirmation pages.
+
+- For message templates you don't *need* to do anything (explained below).
+
+When you send mail without the required Elastic `{unsubscribe}` token, it will now try to add a simple "Delete my email" link, instead of your wordy explanatory text.
+
+That link is wrapped in Elastic's token, but points to a special page on your site which presents an option to the user:
+
+- opt out from all bulk mail
+
+- opt out from all bulk mail and delete my email (meaning no more receipts etc.)
+
+(It's explained a bit more clearly than that on the page. See the template for wording.)
+
+This way the user can make an informed choice about their data.

@@ -95,11 +95,26 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
    *   The mailing context.
    */
   public function alterMailParams(&$params, $context) {
+
+    // Has Track Stats Only been negotiated?
+    $settings = E::getSettings();
+    $trackStatsOnly = !empty($settings['ee_wrapunsubscribe']);
+    $preUnsubscribeText = E::ts(trim($settings['ee_unsubscribe'], " \r\n"));
+    $contactID = $params['contactId'] ?? $params['contactID'] ?? $params['contact_id'] ?? NULL;
+
+    //file_put_contents("/var/www/support.opendemocracy.net/sites/default/files/private/alterMailParams.json", json_encode($params + ['trackStatsOnly' => $trackStatsOnly , 'settings' => $settings, 'contactID' => $contactID]));
+
     // Add custom headers for ElasticEmail
     // This is required so we will get postback URL in Elastic email response,
     // and can then identify the mailing item, source contact, etc.
-    if ($context != 'messageTemplate') {
-      if (!array_key_exists('headers', $params)) $params['headers'] = array();
+
+    switch ($context) {
+    case 'flexmailer':
+    case 'civimail':
+      // Bulk mail.
+      //
+      // Should have a Return-Path with the VERP data, copy that to the special
+      // Elastic Email postback header.
       if (!empty($params['Return-Path'])) {
         $params['headers']['X-ElasticEmail-Postback'] = $params['Return-Path'];
       }
@@ -119,37 +134,106 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
       // done for group-specific unsubscribe links if ee_wrapunsubscribe is
       // set.
       //
-      // See documentation.
+      // See docs/Elastic.md
       //
-      $settings = E::getSettings();
 
       // Nb. the patterns differ in whether it's href='foo' or href="foo"
-      if (empty($settings['ee_wrapunsubscribe'])) {
-        // Only wrap optout links.
-        $patterns = [
-          '@href=(")(https?://[^"]+?civicrm/mailing/optout[^"]+?)(")@',
-          "@href=(')(https?://[^']+?civicrm/mailing/optout[^']+?)(')@",
-        ];
-      }
-      else {
+      if ($trackStatsOnly) {
         // Wrap optout and unsubscribe.
         $patterns = [
           '@href=(")(https?://[^"]+?civicrm/mailing/(?:unsubscribe|optout)[^"]+?)(")@',
           "@href=(')(https?://[^']+?civicrm/mailing/(?:unsubscribe|optout)[^']+?)(')@",
         ];
       }
-
+      else {
+        // Only wrap optout links.
+        $patterns = [
+          '@href=(")(https?://[^"]+?civicrm/mailing/optout[^"]+?)(")@',
+          "@href=(')(https?://[^']+?civicrm/mailing/optout[^']+?)(')@",
+        ];
+      }
       // Apply the patterns.
       $params['html'] = preg_replace($patterns, 'href=$1{unsubscribe:$2}$3', $params['html']);
+      // @todo apply to text?
 
+      // Deliberately no 'break': fall-through to singleEmail...
+
+    case 'singleEmail':
+      // This is the case for messageTemplate sending after tokenisation, as
+      // well as other specialist single email sends.
+
+      $deleteLink = FALSE;
+
+      if (!empty($params['html']) && !preg_match('/{unsubscribe[:}]/', $params['html'])) {
+        // The HTML content is missing an ElasticEmail unsubscribe.
+
+        // If the HTML includes a body tag, we'll need to insert our link just
+        // before the closing tag.
+        $bodyEnd = strpos($params['html'], '</body>');
+        if ($bodyEnd === FALSE) {
+          $bodyEnd = strlen($params['html']);
+        }
+
+        if ($trackStatsOnly && $contactID) {
+          $deleteLink = $this->getDeleteMyEmailLink($contactID, $params['toEmail']);
+        }
+        if ($deleteLink) {
+          // We have been able to get our special delete URL. Wrap link
+          // in Elastic Email's {unsubscribe:xxx} token:
+          $content = '<a href="{unsubscribe:' . htmlspecialchars($deleteLink) . '}">'
+            . E::ts('Delete my email')
+            . '</a>';
+        }
+        else {
+          // We were unable to get our special delete URL but we still have to include
+          // Elastic Email's unsubscribe.
+          $content = htmlspecialchars($preUnsubscribeText) . ' {unsubscribe}';
+        }
+
+        // Inject our link.
+        $params['html'] = substr($params['html'], 0, $bodyEnd)
+          . '<div style="font-size:12px;color:#bbb;line-height:1;padding-top:160px;background:white;">'
+          . $content
+          . '</div>'
+          . substr($params['html'], $bodyEnd);
+      }
+
+      if (!empty($params['text']) && !preg_match('/{unsubscribe[:}]/', $params['text'])) {
+        // The Text content is missing an ElasticEmail unsubscribe.
+        if ($trackStatsOnly && $contactID && $deleteLink === FALSE) {
+          // We have not yet looked up the deleteLink, so try now.
+          // (This will be the case if the email has no HTML part.)
+          $deleteLink = $this->getDeleteMyEmailLink($contactID, $params['toEmail']);
+        }
+        if ($deleteLink) {
+          // We have been able to get our special delete URL. Wrap link
+          // in Elastic Email's {unsubscribe:xxx} token:
+          $content = "{unsubscribe:$deleteLink}";
+        }
+        else {
+          $content = "$preUnsubscribeText {unsubscribe}";
+        }
+
+        // Inject the link
+        $params['text'] .= "\r\n\r\n\r\n$content";
+      }
+      break;
+
+    case 'messageTemplate':
+      // Do nothing (Message templates call this hook twice. We catch those in
+      // the 2nd phase where the context is singleEmail)
+      break;
+
+    default:
+      // Make noise if we find something unexpected.
+      Civi::log()->notice("Undocumented hook_civicrm_alterMailParams context value: " . json_encode($context));
+    }
       // Since we're capable of and our users are data controllers responsible
       // for handling unsubscribes ourselves, we can avert EE's link additons
       // by hiding their unsubscribe link. However you must still ensure your
       // use of their service is within the T&C; they do require that every email
       // has a working unsubscribe/optout link.
-      $params['html'] .= '<!--<a href="{unsubscribe}"></a>-->';
-
-    }
+      // $params['html'] .= '<!--<a href="{unsubscribe}"></a>-->';
   }
 
  /**
@@ -212,5 +296,34 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
 
     // return CiviCRM bounce code and description.
     return ['bounce_type_id' =>  $bounce_type_id, 'bounce_reason' => $mapCategoryToMessage[$category]];
+  }
+  /**
+   * Try to generate a link to the deletemyemail form.
+   *
+   * @return ?string
+   */
+  public function getDeleteMyEmailLink($contactID, $email) {
+    if (!$contactID || !$email) {
+      Civi::log()->notice("Missing one of contactID or email");
+      return;
+    }
+    $emailDao = new CRM_Core_DAO_Email();
+    $emailDao->email = $email;
+    $emailDao->contact_id = $contactID;
+    if ($emailDao->find(TRUE)) {
+      // We have all we need to generate a checksum-ed optout link.
+      $query = [
+        'reset' => 1,
+        'cid' => $contactID,
+        'eid' => $emailDao->id,
+        'cs' => CRM_Contact_BAO_Contact_Utils::generateChecksum($contactID),
+      ];
+      // Create a raw front-end absolute URL
+      Civi::log()->notice("Email found returning a link");
+      return CRM_Utils_System::url('civicrm/deletemyemail', $query, TRUE, NULL, FALSE, TRUE);
+    }
+    else {
+      Civi::log()->notice("Email not found $email for $contactID");
+    }
   }
 }

@@ -125,11 +125,12 @@ class CRM_Airmail_Utils {
         'secretcode' => NULL,
         'external_smtp_service' => NULL,
         'ee_wrapunsubscribe' => NULL,
+        'ee_unsubscribe' => NULL,
       );
       foreach (array_keys($settings) as $setting) {
         try {
           $settings[$setting] = civicrm_api3('Setting', 'getvalue', array(
-            'name' => "airmail_$setting",
+            'name'  => "airmail_$setting",
             'group' => 'Airmail Preferences',
           ));
         }

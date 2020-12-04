@@ -15,8 +15,14 @@
 
     <tr>
       <td>{ts}Elastic Email only{/ts}</td>
-      <td>{$form.ee_wrapunsubscribe.html} {$form.ee_wrapunsubscribe.label}
+      <td>
+        <div>{$form.ee_wrapunsubscribe.html} {$form.ee_wrapunsubscribe.label}</div>
         <p>Checking this box without first negotiating this with Elastic Email will mean you are no longer to email anyone who unsubscribes to any group. See documentation!</p>
+        <div>
+          {$form.ee_unsubscribe.label}
+          {$form.ee_unsubscribe.html}
+          <p>{ts}If you do not include an Elastic Email {literal}{unsubscribe}{/literal} link in your emails, one will be added at the bottom of the email, following this explainer text. See documentation for fuller explanation. Note that the text you enter is transalatable.{/ts}</p>
+        </div>
       </td>
     </tr>
   </table>
