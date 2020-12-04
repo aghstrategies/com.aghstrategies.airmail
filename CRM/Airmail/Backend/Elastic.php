@@ -14,6 +14,11 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   }
 
   public function processMessages($event) {
+    // Keep a log to check what we're being sent.
+    file_put_contents("/var/www/support.opendemocracy.net/sites/default/files/private/elasticemail-events.json",
+      json_encode($event),
+      FILE_APPEND
+    );
 
     // Parse postback url to get all required mailing information.
     $mailingJobInfo = E::parseSourceString($event['postback']);
@@ -180,7 +185,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
         if ($deleteLink) {
           // We have been able to get our special delete URL. Wrap link
           // in Elastic Email's {unsubscribe:xxx} token:
-          $content = '<a href="{unsubscribe:' . htmlspecialchars($deleteLink) . '}">'
+          $content = '<a href="{unsubscribe:' . htmlspecialchars($deleteLink)
+            . '}" style="color:#bbb;">'
             . E::ts('Delete my email')
             . '</a>';
         }
