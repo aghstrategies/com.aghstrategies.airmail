@@ -60,34 +60,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
   * Function for getting bounce type and message.
   */
   public function getBounceTypeMessages($event) {
-    //Elastic Email bounce categories.
-    $elastic_categories = array(
-      'Away' => array('Unknown'),
-      'Relay' => array('Throttled', 'GreyListed', 'Timeout'),
-      'Invalid' => array('NoMailbox', 'NotDelivered', 'SPFProblem'),
-      'Spam' => array('ContentFilter', 'Spam', 'Blacklisted', 'ConnectionTerminated', 'ConnectionProblem'),
-      'Abuse' => array('AbuseReport'),
-      'DNS' => array('DNSProblem'),
-      'Inactive' => array('AccountProblem'),
-    );
 
-    //Default bounce types from civicrm.
-    $civicrm_bounces = array(
-      'Away' => 2,    // soft, retry 30 times
-      'Relay' => 9,   // soft, retry 3 times
-      'Invalid' => 6, // hard, retry 1 time
-      'Spam' => 10,   // hard, retry 1 time
-      'Abuse' => 10,  // hard, retry 1 time
-      'DNS' => 3,
-      'Inactive' => 5,
-    );
-    foreach ($elastic_categories as $value => $categories) {
-      if (in_array($event['category'], $categories)){
-         $bounce_type_id = $civicrm_bounces[$value];
-      }
-    }
-
-    // Add a description for the cause of the bounce (map from Elastic Email bounce category).
+    // Start from the ElasticEmail bounce codes
     // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
     $elastic_mail_messages = array(
       'Unknown' => 'Unknown Error',
@@ -106,6 +80,37 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
       'ConnectionProblem' => 'The email was not delivered because of a connection problem',
       'AbuseReport' => 'Unknown Error',
     );
+
+    // Map Elastic Email bounce categories to generic bounce types
+    $elastic_categories = array(
+      'Away' => array('Unknown', 'Throttled', 'Timeout', 'SPFProblem', 'ConnectionProblem'),
+      'Relay' => array('Greylisted', 'NotDelivered', 'ConnectionTerminated'),
+      'Invalid' => array('NoMailbox', 'Suppressed'),
+      'Spam' => array('ContentFilter', 'Spam', 'Blacklisted'),
+      'Abuse' => array('AbuseReport'),
+      'DNS' => array('DNSProblem'),
+      'Inactive' => array('AccountProblem'),
+    );
+
+    // Map generic bounce types to CiviCRM bounce_type IDs
+    $civicrm_bounces = array(
+      'Away' => 2,    // soft, retry 30 times
+      'Relay' => 9,   // soft, retry 3 times
+      'Invalid' => 6, // hard, retry 1 time
+      'Spam' => 10,   // hard, retry 1 time
+      'Abuse' => 10,  // hard, retry 1 time
+      'DNS' => 3,
+      'Inactive' => 5,
+    );
+
+    // Determine bounce type id from ElasticEmail category
+    foreach ($elastic_categories as $value => $categories) {
+      if (in_array($event['category'], $categories)){
+         $bounce_type_id = $civicrm_bounces[$value];
+      }
+    }
+
+    // Add a description for the cause of the bounce (map from Elastic Email bounce category).
     if (array_key_exists($event['category'], $elastic_mail_messages)) {
       $bounce_reason = $elastic_mail_messages[$event['category']];
     } else {

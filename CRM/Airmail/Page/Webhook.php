@@ -4,7 +4,8 @@ use CRM_Airmail_Utils as E;
 class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
 
   public function run() {
-    if (!empty($settings['secretcode']) && $settings['secretcode'] != CRM_Utils_Array::value('secretcode', $_REQUEST)) {
+    $settings = Civi::cache()->get('airmailSettings');
+    if (!empty($settings['secretcode']) && $settings['secretcode'] !== ($_GET['secretcode'] ?? '')) {
       $this->invalidMessage();
     }
 

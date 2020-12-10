@@ -46,7 +46,7 @@ class CRM_Airmail_Utils {
         $twoDigitStringMin = $verpSeperator . '(\d+)' . $verpSeperator . '(\d+)';
         $twoDigitString = $twoDigitStringMin . $verpSeperator;
         // $string ex: b.179.46.731d881bbb3f9aad@sestest.garrison.aghstrategies.net
-        // Based off of https://github.com/civicrm/civicrm-core/blob/master/CRM/Utils/Mail/EmailProcessor.php
+        // Based off of CRM/Utils/Mail/EmailProcessor.php
         $regex = '/^' . preg_quote($dao->localpart) . '(b|c|e|o|r|u)' . $twoDigitString . '([0-9a-f]{16})@' . preg_quote($dao->domain) . '$/';
         if (preg_match($regex, $string, $matches)) {
           list($match, $action, $job, $queue, $hash) = $matches;
@@ -125,7 +125,7 @@ class CRM_Airmail_Utils {
         'secretcode' => NULL,
         'external_smtp_service' => NULL,
       );
-      foreach ($settings as $setting => $val) {
+      foreach (array_keys($settings) as $setting) {
         try {
           $settings[$setting] = civicrm_api3('Setting', 'getvalue', array(
             'name' => "airmail_$setting",
@@ -149,19 +149,23 @@ class CRM_Airmail_Utils {
    *   The settings to save.
    */
   public static function saveSettings($settings) {
-    $existingSettings = Civi::cache()->get('airmailSettings');
+    // Get all settings: if they are cached then we'll need to update.
+    $cachedSettings = Civi::cache()->get('airmailSettings');
     $settingsToSave = array();
     foreach ($settings as $k => $v) {
-      $existingSettings[$k] = $v;
       $settingsToSave["airmail_$k"] = $v;
     }
     try {
-      $settingsSaved = civicrm_api3('Setting', 'create', $settingsToSave);
+      civicrm_api3('Setting', 'create', $settingsToSave);
+      // As that was successful, update our cached value.
+      $cachedSettings[$k] = $v;
     }
     catch (CiviCRM_API3_Exception $e) {
       $error = $e->getMessage();
       CRM_Core_Error::debug_log_message(self::ts('API Error: %1', [1 => $error]));
     }
+    // Save our (possibly) updated cached values.
+    Civi::cache()->set('airmailSettings', $cachedSettings);
   }
 
 
@@ -181,7 +185,7 @@ class CRM_Airmail_Utils {
           'return' => "mailing_id",
           'id' => $jobId,
         ));
-        Civi::cache()->get('airmailMailingIds', $cachedMailingIDs);
+        Civi::cache()->set('airmailMailingIds', $cachedMailingIDs);
       }
       catch (CiviCRM_API3_Exception $e) {
         $error = $e->getMessage();
