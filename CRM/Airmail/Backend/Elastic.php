@@ -66,7 +66,7 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     $elastic_mail_messages = array(
       'Unknown' => 'Unknown Error',
       'Throttled' => 'The recipient server did not accept the email within 48 hours',
-      'GreyListed' => 'The email was not delivered because the recipient server has determined that this email has not been seen in the configuration provide',
+      'GreyListed' => 'The email was not delivered because the recipient server has temporarily rejected the email',
       'Timeout' => 'The email was not delivered because a timeout occurred',
       'NoMailbox' => 'The email address does not appear to exist',
       'NotDelivered' => 'The recipient has a blocked status for either hard bouncing, being unsubscribed or complained',
@@ -83,8 +83,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
 
     // Map Elastic Email bounce categories to generic bounce types
     $elastic_categories = array(
-      'Away' => array('Unknown', 'Throttled', 'Timeout', 'SPFProblem', 'ConnectionProblem'),
-      'Relay' => array('Greylisted', 'NotDelivered', 'ConnectionTerminated'),
+      'Away' => array('Unknown', 'Throttled', 'Timeout', 'Greylisted', 'SPFProblem', 'ConnectionProblem'),
+      'Relay' => array('NotDelivered', 'ConnectionTerminated'),
       'Invalid' => array('NoMailbox', 'Suppressed'),
       'Spam' => array('ContentFilter', 'Spam', 'Blacklisted'),
       'Abuse' => array('AbuseReport'),
