@@ -12,4 +12,10 @@
     <title>Airmail SMTP Event Notification Processor Settings</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/deletemyemail</path>
+    <page_callback>CRM_Airmail_Form_DeleteMyEmail</page_callback>
+    <title>Delete my email</title>
+    <access_callback>1</access_callback>
+  </item>
 </menu>

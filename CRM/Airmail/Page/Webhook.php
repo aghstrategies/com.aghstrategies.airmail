@@ -16,7 +16,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
       $this->invalidMessage();
     }
 
-    // Process the input
+    // Process the input.
     $events = $backend->processInput(file_get_contents('php://input'));
 
     // Make sure the processed input exists and is valid according to the backend.

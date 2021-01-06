@@ -80,6 +80,10 @@ class CRM_Airmail_Utils {
         'class' => 'CRM_Airmail_Backend_Sendgrid',
         'label' => 'SendGrid',
       ],
+      'Elastic' => [
+        'class' => 'CRM_Airmail_Backend_Elastic',
+        'label' => 'ElasticEmail',
+      ],
     ];
 
     if ($optionList) {
@@ -120,11 +124,13 @@ class CRM_Airmail_Utils {
       $settings = array(
         'secretcode' => NULL,
         'external_smtp_service' => NULL,
+        'ee_wrapunsubscribe' => NULL,
+        'ee_unsubscribe' => NULL,
       );
       foreach (array_keys($settings) as $setting) {
         try {
           $settings[$setting] = civicrm_api3('Setting', 'getvalue', array(
-            'name' => "airmail_$setting",
+            'name'  => "airmail_$setting",
             'group' => 'Airmail Preferences',
           ));
         }
