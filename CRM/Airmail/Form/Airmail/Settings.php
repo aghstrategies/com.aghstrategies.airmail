@@ -10,6 +10,9 @@ use CRM_Airmail_Utils as E;
 class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
 
   public function buildQuickForm() {
+
+    CRM_Core_Resources::singleton()->addScriptFile('com.aghstrategies.airmail', 'js/elastic.js');
+
     CRM_Utils_System::setTitle(E::ts('Airmail Settings'));
 
     // Add form Elements
@@ -26,10 +29,8 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
       ),
     ));
 
-    // It would be nicer if this was modularised.
-    //$eeUnsubscribeWrap = $this->add('checkbox', 'ee_wrapunsubscribe', E::ts('Elastic Email’s Track Stats Only flag has been negotiated for the sending domain.'), $attr, FALSE);
     $eeUnsubscribeWrap = $this->addElement('checkbox', 'ee_wrapunsubscribe', E::ts('Elastic Email’s Track Stats Only flag has been negotiated for the sending domain.'));
-    $eeUnsubscribeExplainer = $this->add('textarea', 'ee_unsubscribe', E::ts('Elastic Email unsubscribe link'), ['rows' => 5, 'cols' => 80], TRUE);
+    $eeUnsubscribeExplainer = $this->add('textarea', 'ee_unsubscribe', E::ts('Elastic Email unsubscribe link'), ['rows' => 5, 'cols' => 80]);
 
     $settings = E::getSettings();
     $this->setDefaults($settings);
