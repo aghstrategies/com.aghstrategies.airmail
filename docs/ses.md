@@ -36,9 +36,10 @@ In SES you will need to:
 ## Settings in SNS
 Once you have set up a configuration Set you will need to go to SNS home and configure SNS to process the topic.
 
-Go to SNS Home -> Topics -> check the topic you just created and from the Actions list select "Subscribe to topic"
+* Go to **SNS Home -> Topics** and click on the name of the topic you created above.
+* Click the **Create Subscription** button.
 
-For Create a subscription the Topic ARN should be populates, The Protocol should be HTTP and the endpoint should be the url in the green box on the settings page for this extension (somethng like: http://{yourDomain}/civicrm?page=CiviCRM&q=civicrm/airmail/webhook&reset=1&secretcode={secretCode}) then click "Create Subscription"
+On the *Create Subscription* screen the Topic ARN should be populated.  Set the Protocol to **HTTPS**.  The endpoint should be the URL in the green box on the settings page for this extension (somethng like: http://{yourDomain}/civicrm?page=CiviCRM&q=civicrm/airmail/webhook&reset=1&secretcode={secretCode}) then click "Create Subscription"
 
 At first the Subscription will show up as pendingConfirmation, you may need to wait a minute and then refresh the page before it confirms... SNS sends a subscribe URL to your site which this extension responds to.. that process takes a minute or two.
 
