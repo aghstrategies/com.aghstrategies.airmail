@@ -30,9 +30,3 @@ Wordpress Ex: http://{yourDomain}/civicrm?civiwp=CiviCRM&q=civicrm/airmail/webho
 + [Amazon SES specfic Configuration](/docs/ses.md)
 + [SendGrid specific Configuration](/docs/Sendgrid.md)
 + [Elastic Email specific Configuration](/docs/Elastic.md)
-
-### To Dos:
-
-+ Deal with all Event Types including "Reject", "Send", "Delivery", "Click", "Open", and "Rendering Failure"
-+ When Event Type is Complaint, opt out the contact from all emails (need to get contact id to do this)
-+ Save the arn to civi when there is a successful subscription
