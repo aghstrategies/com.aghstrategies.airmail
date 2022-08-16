@@ -274,8 +274,11 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
       'Unknown'               => 2,  // Away    30 tries
     ];
 
+    $category = $event['category'];
     $bounce_type_id = $mapElasticCategoryToCiviBounceType[$event['category']] ?? NULL;
-    $category = $bounce_type_id ?? 'Undocumented';
+    if (!$bounce_type_id) {
+      $category = 'Undocumented';
+    }
 
     // Add a description for the cause of the bounce (map from Elastic Email bounce category).
     // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
