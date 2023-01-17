@@ -5,7 +5,7 @@ class CRM_Airmail_Page_Webhook extends CRM_Core_Page {
 
   public function run() {
 
-    $settings = CRM_Airmail_Utils::getSettings();
+    $settings = E::getSettings();
     if (!empty($settings['secretcode']) && $settings['secretcode'] !== ($_GET['secretcode'] ?? '')) {
       $this->invalidMessage();
     }
