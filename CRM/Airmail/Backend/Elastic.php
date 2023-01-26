@@ -15,10 +15,7 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
 
   public function processMessages($event) {
     // Keep a log to check what we're being sent.
-    file_put_contents("/var/www/support.opendemocracy.net/sites/default/files/private/elasticemail-events.json",
-      json_encode($event),
-      FILE_APPEND
-    );
+    // file_put_contents("/path/to/somewhere/private/elasticemail-events.json", json_encode($event), FILE_APPEND);
 
     // Parse postback url to get all required mailing information.
     $mailingJobInfo = E::parseSourceString($event['postback']);
@@ -275,7 +272,8 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     ];
 
     $bounce_type_id = $mapElasticCategoryToCiviBounceType[$event['category']] ?? NULL;
-    $category = $bounce_type_id ?? 'Undocumented';
+    // If category matched the map above, it's known, otherwise it's undocumented.
+    $category = $bounce_type_id ? $event['category'] : 'Undocumented';
 
     // Add a description for the cause of the bounce (map from Elastic Email bounce category).
     // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
