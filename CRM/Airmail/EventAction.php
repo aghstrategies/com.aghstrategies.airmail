@@ -3,6 +3,7 @@
 use CRM_Airmail_Utils as E;
 
 class CRM_Airmail_EventAction {
+
   /**
    * Record Bounce Event
    * @param array $params
@@ -43,7 +44,7 @@ class CRM_Airmail_EventAction {
    * @param array $params
    *   Must include a key `event_queue_id` with the queue of the email
    */
-  public function open($params) {
+  public static function open($params) {
     CRM_Mailing_Event_BAO_Opened::open($params['event_queue_id']);
   }
 
@@ -53,7 +54,7 @@ class CRM_Airmail_EventAction {
    * @param array $params
    *   The usual `job_id` and `event_queue_id`, plus `url` for the whole URL.
    */
-  public function click($params) {
+  public static function click($params) {
     $mailingId = CRM_Airmail_Utils::mailingIdFromJob($params['job_id']);
     $trackerId = CRM_Mailing_BAO_TrackableURL::getTrackerURLId($params['url'], $mailingId);
     if ($trackerId) {
