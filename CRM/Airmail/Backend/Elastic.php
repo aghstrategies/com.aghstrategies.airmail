@@ -281,7 +281,7 @@ class CRM_Airmail_Backend_Elastic implements CRM_Airmail_Backend {
     // see https://help.elasticemail.com/en/articles/2300650-what-are-the-bounce-error-categories-and-filters
     $mapCategoryToMessage = [
       'AccountProblem'        => 'There is something wrong with the mailbox of the recipient, eg. the mailbox is full and cannot accept more emails',
-      'Blacklisted'           => 'Email is black listed',
+      'BlackListed'           => 'Email is black listed',
       'CodeError'             => 'Error at Elastic Email; will be retried; Contact Elastic Email if a recurring problem.',
       'ConnectionProblem'     => 'The email was not delivered because of a connection problem',
       'ConnectionTerminated'  => 'The status of the email is not known for sure because the recipient server terminated the connection without returning a message code or status',
