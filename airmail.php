@@ -189,6 +189,7 @@ function airmail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
 function airmail_civicrm_managed(&$entities) {
+  CRM_Airmail::createTransactionalMailing();
   _airmail_civix_civicrm_managed($entities);
 }
 
