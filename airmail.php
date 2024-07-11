@@ -42,6 +42,7 @@ function airmail_civicrm_alterMailParams(&$params, $context) {
           'job_id' => CRM_Core_DAO::getFieldValue('CRM_Mailing_DAO_MailingJob', $mail->id, 'id', 'mailing_id'),
           'contact_id' => $contactId,
           'email_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Email', $contactId, 'id', 'contact_id'),
+          'mailing_id' => $mail->id,
         ]);
 
         // Add m to differentiate from bulk mailing
@@ -145,15 +146,6 @@ function airmail_civicrm_disable() {
 }
 
 /**
- * Implements hook_civicrm_upgrade().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
- */
-function airmail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  return _airmail_civix_civicrm_upgrade($op, $queue);
-}
-
-/**
  * Implements hook_civicrm_managed().
  *
  * Generate a list of entities to create/deactivate/delete when this module
@@ -163,5 +155,4 @@ function airmail_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  */
 function airmail_civicrm_managed(&$entities) {
   CRM_Airmail::createTransactionalMailing();
-  _airmail_civix_civicrm_managed($entities);
 }
