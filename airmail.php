@@ -134,4 +134,3 @@ function airmail_civicrm_install() {
 function airmail_civicrm_enable() {
   _airmail_civix_civicrm_enable();
 }
-
