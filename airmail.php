@@ -5,6 +5,8 @@ use CRM_Airmail_Utils as E;
 
 /**
  * Implements hook_civicrm_alterMailParams().
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_alterMailParams
  */
 function airmail_civicrm_alterMailParams(&$params, $context) {
   $backend = E::getBackend();
@@ -42,6 +44,7 @@ function airmail_civicrm_alterMailParams(&$params, $context) {
           'job_id' => CRM_Core_DAO::getFieldValue('CRM_Mailing_DAO_MailingJob', $mail->id, 'id', 'mailing_id'),
           'contact_id' => $contactId,
           'email_id' => CRM_Core_DAO::getFieldValue('CRM_Core_DAO_Email', $contactId, 'id', 'contact_id'),
+          'mailing_id' => $mail->id,
         ]);
 
         // Add m to differentiate from bulk mailing
@@ -96,7 +99,7 @@ function airmail_civicrm_navigationMenu(&$menu) {
   $adder = new CRM_Airmail_NavAdd($menu);
 
   $attributes = array(
-    'label' => ts('Airmail Configuration'),
+    'label' => E::ts('Airmail Configuration'),
     'name' => 'Airmail Configuration',
     'url' => 'civicrm/airmail/settings',
     'permission' => 'access CiviMail,administer CiviCRM',
@@ -120,7 +123,7 @@ function airmail_civicrm_config(&$config) {
 /**
  * Implements hook_civicrm_install().
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_install
  */
 function airmail_civicrm_install() {
   _airmail_civix_civicrm_install();
@@ -129,8 +132,20 @@ function airmail_civicrm_install() {
 /**
  * Implements hook_civicrm_enable().
  *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_enable
  */
 function airmail_civicrm_enable() {
   _airmail_civix_civicrm_enable();
+}
+
+/**
+ * Implements hook_civicrm_managed().
+ *
+ * Generate a list of entities to create/deactivate/delete when this module
+ * is installed, disabled, uninstalled.
+ *
+ * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_managed
+ */
+function airmail_civicrm_managed(&$entities) {
+  CRM_Airmail::createTransactionalMailing();
 }
