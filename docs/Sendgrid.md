@@ -22,3 +22,5 @@ To Confirm that Open and Click Tracking is turned on in CiviCRM for your site lo
 >  Enable click-through tracking by default
 
 Checking these boxes will set all future CiviMailings to default to having click-through tracking and open tracking enabled. You can overwrite these options on the settings for a specific mailing if you like.
+
+Once Open and Click Tracking is turned on in CiviCRM for your site, you can choose to turn off sendgrid's tracking at https://app.sendgrid.com/settings/tracking as CiviCRM will be doing this.
