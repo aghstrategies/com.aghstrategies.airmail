@@ -21,13 +21,13 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
     $secretCode->setSize(40);
     $smtpService = $this->add('select', 'external_smtp_service', E::ts('External SMTP Service'), NULL, TRUE);
     $smtpService->loadArray(E::listBackends(TRUE));
-    $this->addButtons(array(
-      array(
+    $this->addButtons([
+      [
         'type' => 'submit',
         'name' => E::ts('Save Configuration'),
         'isDefault' => TRUE,
-      ),
-    ));
+      ],
+    ]);
 
     $eeUnsubscribeWrap = $this->addElement('checkbox', 'ee_wrapunsubscribe', E::ts('Elastic Email’s Track Stats Only flag has been negotiated for the sending domain.'));
     $eeUnsubscribeExplainer = $this->add('textarea', 'ee_unsubscribe', E::ts('Elastic Email unsubscribe link'), ['rows' => 5, 'cols' => 80]);
@@ -82,7 +82,7 @@ class CRM_Airmail_Form_Airmail_Settings extends CRM_Core_Form {
     // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
     // items don't have labels.  We'll identify renderable by filtering on
     // the 'label'.
-    $elementNames = array();
+    $elementNames = [];
     foreach ($this->_elements as $element) {
       /** @var HTML_QuickForm_Element $element */
       $label = $element->getLabel();

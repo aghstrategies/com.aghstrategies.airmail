@@ -98,7 +98,7 @@ function airmail_civicrm_navigationMenu(&$menu) {
 
   $adder = new CRM_Airmail_NavAdd($menu);
 
-  $attributes = array(
+  $attributes = [
     'label' => E::ts('Airmail Configuration'),
     'name' => 'Airmail Configuration',
     'url' => 'civicrm/airmail/settings',
@@ -106,8 +106,8 @@ function airmail_civicrm_navigationMenu(&$menu) {
     'operator' => 'AND',
     'separator' => 1,
     'active' => 1,
-  );
-  $adder->addItem($attributes, array('Mailings'));
+  ];
+  $adder->addItem($attributes, ['Mailings']);
   $menu = $adder->getMenu();
 }
 
