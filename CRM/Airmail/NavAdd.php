@@ -75,12 +75,12 @@ class CRM_Airmail_NavAdd {
   public function addItem($attributes, $idealTree) {
     // Walk down the menu to see if we can find them where we expect them.
     $walkMenu = $this->menu;
-    $branches = array();
+    $branches = [];
     reset($idealTree);
     foreach ($idealTree as $limb) {
       foreach ($walkMenu as $id => $item) {
         if ($item['attributes']['name'] == $limb) {
-          $walkMenu = CRM_Utils_Array::value('child', $item, array());
+          $walkMenu = CRM_Utils_Array::value('child', $item, []);
           $branches[] = $id;
           $branches[] = 'child';
           continue 2;
@@ -104,7 +104,7 @@ class CRM_Airmail_NavAdd {
     // Our ID is the next one after the current maximum.
     $this->maxId++;
     $attributes['navID'] = $this->maxId;
-    $treeMenu[$this->maxId] = array('attributes' => $attributes);
+    $treeMenu[$this->maxId] = ['attributes' => $attributes];
   }
 
   /**

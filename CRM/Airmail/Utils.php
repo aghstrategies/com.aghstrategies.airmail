@@ -37,7 +37,7 @@ class CRM_Airmail_Utils {
       if ($dao->is_default == 1) {
 
         // empty array to use for preg match
-        $matches = array();
+        $matches = [];
 
         // Get Verp separator setting
         $config = CRM_Core_Config::singleton();
@@ -50,11 +50,11 @@ class CRM_Airmail_Utils {
         $regex = '/^' . preg_quote($dao->localpart) . '(b|c|e|o|r|u)' . $twoDigitString . '([0-9a-z]{16})@' . preg_quote($dao->domain) . '$/';
         if (preg_match($regex, $string, $matches)) {
           list($match, $action, $job, $queue, $hash) = $matches;
-          $bounceEvent = array(
+          $bounceEvent = [
             'job_id' => $job,
             'event_queue_id' => $queue,
             'hash' => $hash,
-          );
+          ];
           return $bounceEvent;
         }
       }
@@ -152,13 +152,13 @@ class CRM_Airmail_Utils {
    *   The ID number of the corresponding mailing
    */
   public static function mailingIdFromJob($jobId) {
-    $cachedMailingIDs = Civi::cache()->get('airmailMailingIds') ?: array();
+    $cachedMailingIDs = Civi::cache()->get('airmailMailingIds') ?: [];
     if (empty($cachedMailingIDs[$jobId])) {
       try {
-        $cachedMailingIDs[$jobId] = civicrm_api3('MailingJob', 'getvalue', array(
+        $cachedMailingIDs[$jobId] = civicrm_api3('MailingJob', 'getvalue', [
           'return' => "mailing_id",
           'id' => $jobId,
-        ));
+        ]);
         Civi::cache()->set('airmailMailingIds', $cachedMailingIDs);
       }
       catch (CRM_Core_Exception $e) {
@@ -179,9 +179,9 @@ class CRM_Airmail_Utils {
    */
   public static function getMailingByJob($jobId) {
     $mailingId = self::mailingIdFromJob($jobId);
-    $mailingCache = Civi::cache()->get('airmailMailingCache') ?: array();
+    $mailingCache = Civi::cache()->get('airmailMailingCache') ?: [];
     if (empty($mailingCache[$mailingId])) {
-      $mailingCache[$mailingId] = civicrm_api3('Mailing', 'getsingle', array('id' => $mailingId));
+      $mailingCache[$mailingId] = civicrm_api3('Mailing', 'getsingle', ['id' => $mailingId]);
       Civi::cache()->set('airmailMailingCache', $mailingCache);
     }
     return $mailingCache[$mailingId];
